@@ -1,0 +1,26 @@
+# What must not be uploaded to the deployment.
+#
+# The site is served from the repo root, so anything left here is a public
+# URL. Removing the <script> tag from index.html is not enough on its own —
+# without this file /js/guests.js would still be downloadable.
+
+# The guest list. It is the seed source for the database and runs only on
+# this machine, via `npm run db:seed`. If you ever put the script tag back
+# in index.html you must take this line out too, or the lookup will break.
+js/guests.js
+
+# Raw source images. The gate ships the cropped, compressed derivatives in
+# assets/img/gate-*; these originals are large and one of them carries a
+# stock watermark, so neither belongs on a public URL.
+new_images/
+
+# Local tooling and notes — no reason for these to be on the internet.
+scripts/
+tools/
+server/
+CLAUDE.md
+README.md
+.vscode/
+.agents/
+.claude/
+skills-lock.json

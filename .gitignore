@@ -3,3 +3,12 @@
 node_modules/
 .vscode/settings.json
 *.log
+.vercel
+.env
+.env*.local
+.env*
+
+# agent skills the Neon integration installs; regenerable, not part of the site
+.agents/
+.claude/
+skills-lock.json

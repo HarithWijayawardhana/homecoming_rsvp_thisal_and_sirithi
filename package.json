@@ -1,0 +1,16 @@
+{
+  "name": "homecoming-rsvp-thisal-and-sirithi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RSVP page for the homecoming reception of Thisal & Sirithi",
+  "type": "module",
+  "comment": "The page itself has no dependencies and no build step. The one entry below is only for the serverless functions in api/ — it is what lets them reach Neon Postgres. Do not add a build script; Vercel serves the repo root as static files.",
+  "scripts": {
+    "db:schema": "node --env-file=.env.local scripts/schema.mjs",
+    "db:seed": "node --env-file=.env.local scripts/seed-guests.mjs",
+    "db:check": "node --env-file=.env.local scripts/check.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2"
+  }
+}

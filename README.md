@@ -1,7 +1,11 @@
 # Thisal &amp; Sirithi — Homecoming Reception
 
-A single-page RSVP site. No build step, no framework, no dependencies — open
-`index.html` and it runs.
+A single-page RSVP site. No build step and no framework. The page has no
+dependencies — open `index.html` and it runs. Responses go to Neon Postgres via
+three small serverless functions, which is the only reason a `package.json`
+exists, and it holds exactly one entry.
+
+Live at <https://homecoming-rsvp-thisal-and-sirithi.vercel.app>.
 
 ```
 .
@@ -11,26 +15,45 @@ A single-page RSVP site. No build step, no framework, no dependencies — open
 │   └── styles.css              design tokens at the top, sections below
 ├── js/
 │   ├── main.js                 lantern ignition, petals, countdown, RSVP
-│   └── guests.js               the guest list, one entry per envelope
+│   └── guests.js               the guest list — local only, never deployed
 ├── assets/img/
 │   ├── painting.webp           the artwork with the lamps erased
 │   └── lantern-01..04.webp     the four lamps, cut out as sprites
+├── api/
+│   ├── lookup.js               GET  /api/lookup?q=      finds a party
+│   ├── rsvp.js                 POST /api/rsvp           stores a response
+│   ├── responses.js            GET  /api/responses?key= CSV export
+│   └── _db.js, _guests.js      helpers (the _ keeps Vercel from routing them)
+├── scripts/
+│   ├── schema.mjs              create the tables
+│   ├── seed-guests.mjs         push js/guests.js into the database
+│   └── check.mjs               who has replied so far
 ├── server/
-│   └── apps-script.gs          optional: collect RSVPs in a Google Sheet
+│   └── apps-script.gs          the old Google Sheets route, unused
 ├── tools/
 │   └── extract_lanterns.py     optional: regenerate the art if it changes
-└── netlify.toml                publish root + long cache on /assets
+├── vercel.json                 cache headers; no framework, no build
+└── .vercelignore               what must never reach the internet
 ```
 
 ---
 
 ## 1. Run it locally
 
-Open the folder in VS Code, then either:
+**To work on the RSVP flow** you need the API running too, so use:
 
-- install the **Live Server** extension (Ritwick Dey), right-click `index.html`
-  → *Open with Live Server*, or
-- run `npx serve` in the terminal, or `python3 -m http.server 5173`.
+```bash
+vercel env pull .env.local   # first time only
+npm install                  # first time only
+vercel dev                   # http://localhost:3000
+```
+
+**To work on the design only** — artwork, type, copy, lanterns — any static
+server will do, and the lookup simply will not find anyone:
+
+- the **Live Server** extension (Ritwick Dey): right-click `index.html` →
+  *Open with Live Server*, or
+- `npx serve`, or `python3 -m http.server 5173`.
 
 Use a server rather than double-clicking the file. Opening it as `file://`
 works, but some browsers block the WebP assets and the fonts under that scheme.
@@ -108,16 +131,52 @@ Only add an alias for something a guest might genuinely type that is not
 already in the entry — a nickname, a maiden name. First names and surnames
 already match on their own.
 
-**While the list lives in this file it ships to the browser**, so anyone can
-view-source and read every name. To keep it private, put the list in a
-`Guests` tab in the sheet and set `LOOKUP_ENDPOINT` (below) — matches are then
-found server-side and only the matching party is ever sent back.
+This file is still the one place the list is written by hand, but **it is no
+longer public**: `index.html` does not load it and `.vercelignore` keeps it out
+of the deployment, so matches are found server-side and only the party that
+matched is ever sent back. Edit the file, run `npm run db:seed`, done.
 
 ## 4. Make it actually send
 
-Right now responses are validated and logged to the console. Pick one route:
+**Already done** — the site posts to its own `/api/rsvp` and stores responses in
+Neon Postgres. See section 4a. The Google Sheets route below is kept only as a
+fallback; you do not need it.
 
-### Google Sheets (free, no account beyond Google)
+### 4a. Vercel and Neon Postgres — what is running now
+
+Live at <https://homecoming-rsvp-thisal-and-sirithi.vercel.app>, Vercel project
+`homecoming-rsvp-thisal-and-sirithi`. The GitHub repo is connected, so pushing to
+`main` deploys.
+
+| route | does |
+| --- | --- |
+| `GET /api/lookup?q=` | finds a party; aliases match but are never returned |
+| `POST /api/rsvp` | stores one row per party plus one per person |
+| `GET /api/responses?key=ADMIN_KEY` | CSV of every response — add `&format=json` for JSON |
+
+To get the responses out, open the export URL in a browser and it downloads a CSV
+that opens in Excel or Sheets. The key is in the Vercel project's environment
+variables as `ADMIN_KEY`; do not put it in the repo or link to the URL anywhere.
+
+Day to day:
+
+```bash
+vercel env pull .env.local   # get DATABASE_URL and ADMIN_KEY locally
+npm install                  # one dependency, for api/ only
+npm run db:schema            # create the tables (safe to re-run)
+npm run db:seed              # push js/guests.js into the database
+npm run db:check             # who has replied so far
+vercel dev                   # the page with the api working, on :3000
+```
+
+Two things worth knowing:
+
+- Preview and production share one database, so test submissions land among the
+  real ones. Clear them when you are finished.
+- Every submission is kept. If a family answers twice you get both, and the older
+  one is marked `superseded` in the export rather than thrown away.
+
+### Google Sheets (the old route — not in use)
 
 1. Create a sheet with a `Responses` tab, headers:
    `Received | Party | Name | Attending | Seats coming | Invited | Contact | Song | Notes | Message`
@@ -206,14 +265,22 @@ offline.
 
 ## 7. Deploy
 
-Any static host. No build command, publish directory is the project root.
+Already deployed to Vercel, and the repo is connected — **push to `main` and it
+goes live**. To deploy by hand:
 
-- **Netlify** — drag the folder onto the dashboard, or connect the repo.
-- **Vercel** — import the repo, framework preset *Other*.
-- **GitHub Pages** — push to `main`, Settings → Pages → deploy from `main` / root.
-- **Cloudflare Pages** — connect the repo, leave the build command empty.
+```bash
+vercel deploy --prod
+```
 
-Then point your domain at it and send the link.
+There is still no build command; Vercel serves the project root and turns each
+file in `api/` into a function.
+
+A purely static host (GitHub Pages, Netlify, Cloudflare Pages) will no longer
+work on its own: it would serve the page with no `/api` behind it, so the lookup
+would fail and nothing would be saved. That is why `netlify.toml` was removed.
+
+Left to do: point a real domain at the project — `vercel domains add <domain>` —
+so the link reads well when guests receive it.
 
 ---
 

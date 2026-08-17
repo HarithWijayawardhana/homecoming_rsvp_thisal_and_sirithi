@@ -71,8 +71,11 @@ p{line-height:1.75; margin:0}
 .rule b{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);display:block}
 
 
-/* ---------- petals canvas ---------- */
-#petals{position:fixed; inset:0; z-index:3; pointer-events:none}
+/* ---------- petals canvas ----------
+   canvas is a replaced element, so inset:0 alone does not stretch it — it
+   keeps its intrinsic 300x150 and the petals bunch in the top-left corner.
+   The explicit size is what makes them fall across the whole page. */
+#petals{position:fixed; inset:0; width:100%; height:100%; z-index:3; pointer-events:none}
 
 /* ---------- shell ---------- */
 .wrap{position:relative; z-index:4; width:var(--shell); margin-inline:auto}
@@ -337,14 +340,198 @@ footer{padding:var(--sp) 0 70px; text-align:center}
 .reveal[data-d="4"]{transition-delay:.48s}
 .reveal[data-d="5"]{transition-delay:.6s}
 
-/* ---------- curtain ---------- */
-#curtain{
-  position:fixed; inset:0; z-index:80; background:var(--blush);
-  display:grid; place-items:center; transition:opacity 1.1s ease .35s, visibility 1.1s ease .35s;
+/* ---------- the gate ----------
+   Two halves of velvet over a dark house. Opening translates the halves
+   outward while the fabric inside each one lags behind, so the cloth
+   gathers rather than slides. Everything animated here is transform,
+   opacity or filter — no layout is touched. --dir is the direction a half
+   travels, --mir mirrors the right half so one image serves as both. */
+#gate{
+  position:fixed; inset:0; z-index:90;
+  overflow:hidden; touch-action:none; cursor:pointer;
+  --ease:cubic-bezier(.62,0,.16,1);
+  --draw:1.65s;
 }
-#curtain .mono{font-family:'Italiana',serif; font-size:30px; letter-spacing:.34em; color:var(--gold); opacity:0; animation:mono 1.5s ease forwards}
-@keyframes mono{0%{opacity:0;letter-spacing:.7em}55%{opacity:1}100%{opacity:1;letter-spacing:.34em}}
-body.ready #curtain{opacity:0; visibility:hidden}
+body.gate-up{overflow:hidden}
+
+/* the dark house the curtain hangs in. Fades to nothing, which is what
+   uncovers the real page underneath. */
+.gate__ground{
+  position:absolute; inset:0;
+  background:radial-gradient(122% 82% at 50% 44%, #5C1522 0%, #2A0A12 56%, #15060A 100%);
+  transition:opacity 1.05s ease .5s;
+}
+
+/* warm depth glimpsed through the parting */
+.gate__lights{
+  position:absolute; inset:-5%;
+  opacity:.6; filter:blur(9px) saturate(1.1);
+  transform:scale(1.06) translate(calc(var(--px,0) * -14px), calc(var(--py,0) * -10px));
+  transition:opacity 1.05s ease .45s, filter 1.2s ease .1s, transform .6s ease;
+}
+.gate__lights img{width:100%; height:100%; object-fit:cover; display:block}
+
+/* the shaft of light that widens through the gap */
+.gate__shaft{
+  position:absolute; left:50%; top:0; bottom:0; width:4px;
+  transform:translateX(-50%); opacity:0; pointer-events:none;
+  mix-blend-mode:screen;
+  background:radial-gradient(52% 62% at 50% 42%, rgba(255,229,184,.95), rgba(255,192,124,.34) 44%, transparent 74%);
+}
+
+/* ---- the halves ---- */
+.gate__half{
+  position:absolute; top:-2%; bottom:-2%; width:52%;
+  overflow:hidden; will-change:transform;
+  transition:transform var(--draw) var(--ease);
+}
+.gate__half--l{left:0;  --dir:-1; --mir:1}
+.gate__half--r{right:0; --dir:1;  --mir:-1}
+
+/* oversized so the fabric has material to gather into */
+.gate__fab{
+  position:absolute; top:0; bottom:0; left:-26%; right:-26%;
+  transform:scaleX(var(--mir));
+  transition:transform var(--draw) var(--ease);
+}
+.gate__fab img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  animation:breathe 7.5s ease-in-out infinite;
+}
+.gate__half--r .gate__fab img{animation-delay:-3.1s}
+@keyframes breathe{0%,100%{transform:scale(1)} 50%{transform:scale(1.008)}}
+
+/* specular sweep as the cloth turns */
+.gate__sheen{
+  position:absolute; inset:0; opacity:0; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(105deg, transparent 34%, rgba(255,228,186,.20) 47%,
+             rgba(255,241,216,.38) 51%, rgba(255,228,186,.20) 55%, transparent 68%);
+}
+
+/* thickness at the leading edge — the fold nearest the gap turns away from
+   the light, so it goes dark quickly and then lifts into a thin highlight
+   right at the cut. Without this the two halves read as sliding rectangles. */
+.gate__edge{position:absolute; top:0; bottom:0; width:18%; pointer-events:none}
+.gate__half--l .gate__edge{
+  right:0;
+  background:linear-gradient(to left, rgba(255,214,160,.16) 0, rgba(0,0,0,.62) 6%, rgba(0,0,0,.34) 34%, transparent 100%);
+}
+.gate__half--r .gate__edge{
+  left:0;
+  background:linear-gradient(to right, rgba(255,214,160,.16) 0, rgba(0,0,0,.62) 6%, rgba(0,0,0,.34) 34%, transparent 100%);
+}
+
+/* gold light bleeding through where the two halves meet */
+.gate__seam{
+  position:absolute; left:50%; top:0; bottom:0; width:3px; transform:translateX(-50%);
+  background:linear-gradient(to bottom, transparent, rgba(255,214,150,.5) 18%,
+             rgba(255,232,194,.85) 50%, rgba(255,214,150,.5) 82%, transparent);
+  filter:blur(2.5px); pointer-events:none;
+  animation:seam 6s ease-in-out infinite;
+  transition:opacity .45s ease;
+}
+@keyframes seam{0%,100%{opacity:.4} 50%{opacity:.78}}
+
+.gate__vig{
+  position:absolute; inset:0; pointer-events:none;
+  background:radial-gradient(130% 92% at 50% 45%, transparent 30%, rgba(20,4,9,.5) 78%, rgba(13,3,6,.84) 100%);
+  transition:opacity .9s ease .45s;
+}
+
+/* ---- the plate ---- */
+.gate__plate{
+  position:absolute; inset:0; z-index:4;
+  display:grid; place-content:center; justify-items:center;
+  text-align:center; padding:24px;
+  transform:translate(calc(var(--px,0) * 7px), calc(var(--py,0) * 5px));
+  transition:opacity .5s ease, transform .6s ease;
+}
+/* The velvet is busiest exactly where the type sits. This pool of shadow
+   is what keeps the invitation readable over it. */
+.gate__plate::before{
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:radial-gradient(58% 42% at 50% 50%, rgba(22,5,10,.82) 0%,
+             rgba(22,5,10,.6) 42%, rgba(22,5,10,.24) 68%, transparent 88%);
+}
+.gate__eyebrow{
+  font-family:'Jost',sans-serif; font-weight:300;
+  font-size:clamp(9px,.95vw,11px); letter-spacing:.44em; text-transform:uppercase;
+  color:rgba(247,236,214,.78); margin:0 0 clamp(14px,2vw,22px);
+  text-shadow:0 1px 8px rgba(18,4,8,.85);   /* the florals sit right behind it */
+  opacity:0; animation:gfade .9s ease .25s forwards;
+}
+.gate__mono{
+  font-family:'Italiana',serif; font-size:clamp(34px,7.2vw,78px); line-height:1.04;
+  color:#F7E8CC; margin:0; text-shadow:0 2px 44px rgba(255,190,120,.34);
+  opacity:0; animation:gname 1.5s cubic-bezier(.2,.7,.2,1) .35s forwards;
+}
+.gate__mono .amp{color:var(--gold-2); font-style:italic}
+@keyframes gname{
+  0%{opacity:0; letter-spacing:.34em; transform:translateY(10px)}
+  100%{opacity:1; letter-spacing:.02em; transform:none}
+}
+@keyframes gfade{to{opacity:1}}
+
+.gate__rule{display:flex; align-items:center; gap:12px; width:min(320px,62vw); margin-top:clamp(16px,2.4vw,26px)}
+.gate__rule i{
+  flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(227,193,134,.75));
+  transform:scaleX(0); transform-origin:right; animation:gdraw 1.1s cubic-bezier(.2,.7,.2,1) .8s forwards;
+}
+.gate__rule i:last-child{transform-origin:left; background:linear-gradient(90deg,rgba(227,193,134,.75),transparent)}
+.gate__rule b{width:5px; height:5px; background:var(--gold-2); transform:rotate(45deg); opacity:0; animation:gfade .6s ease 1.1s forwards}
+@keyframes gdraw{to{transform:scaleX(1)}}
+
+.gate__date{
+  font-family:'Jost',sans-serif; font-size:clamp(10px,1.05vw,12px);
+  letter-spacing:.42em; color:rgba(227,193,134,.8);
+  margin:clamp(16px,2.2vw,24px) 0 0; opacity:0; animation:gfade .9s ease 1.15s forwards;
+}
+
+/* ---- the seal ---- */
+.seal{
+  margin-top:clamp(30px,4.4vw,48px); display:grid; justify-items:center; gap:15px;
+  background:none; border:0; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  opacity:0; animation:gfade .8s ease 1.5s forwards;
+}
+.seal__disc{
+  position:relative; display:grid; place-items:center;
+  width:clamp(76px,10vw,96px); aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(120% 120% at 32% 26%, #F0D094 0%, #C89A46 42%, #9A6B24 78%, #6E4715 100%);
+  box-shadow:0 10px 34px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,241,213,.65), inset 0 -8px 18px rgba(84,48,10,.6);
+  transition:transform .5s cubic-bezier(.2,.7,.2,1);
+}
+.seal__disc::after{
+  content:''; position:absolute; inset:-14px; border-radius:50%;
+  border:1px solid rgba(227,193,134,.4); animation:halo 3.6s ease-in-out infinite;
+}
+@keyframes halo{0%,100%{transform:scale(1); opacity:.5} 50%{transform:scale(1.13); opacity:0}}
+.seal__mono{font-family:'Italiana',serif; font-size:clamp(17px,2vw,21px); letter-spacing:.06em; color:#4A2B08; text-shadow:0 1px 0 rgba(255,240,208,.5)}
+.seal__label{font-family:'Jost',sans-serif; font-size:clamp(10px,1.05vw,11.5px); letter-spacing:.34em; text-transform:uppercase; color:rgba(245,231,203,.82)}
+.seal:hover .seal__disc{transform:translateY(-3px) scale(1.05)}
+.seal:active .seal__disc{transform:translateY(1px) scale(.97)}
+.seal:focus-visible .seal__disc{outline:2px solid var(--gold-2); outline-offset:8px}
+
+/* The gate hands focus to this heading so a screen reader lands on the
+   invitation rather than at the top of a page that just changed under it.
+   It carries tabindex="-1", so it is never reachable by Tab and the ring
+   would only ever appear for that programmatic move — where it reads as a
+   stray box around the couple's names. Interactive controls keep theirs. */
+.hero__names:focus{outline:none}
+
+/* ---- opening ---- */
+.gate--open{cursor:default}
+.gate--open .gate__half{transform:translateX(calc(var(--dir) * 58%)) scale(1.07) rotate(calc(var(--dir) * -1.4deg))}
+.gate--open .gate__fab{transform:scaleX(var(--mir)) translateX(22%)}
+.gate--open .gate__fab img{animation:none}
+.gate--open .gate__ground,
+.gate--open .gate__vig{opacity:0}
+.gate--open .gate__seam{opacity:0; animation:none}
+.gate--open .gate__lights{opacity:0; filter:blur(0) saturate(1.25); transform:scale(1.14)}
+.gate--open .gate__sheen{animation:sheen 1.5s cubic-bezier(.4,0,.25,1) .06s}
+.gate--open .gate__shaft{animation:shaft 1.7s var(--ease) .1s forwards}
+.gate--open .gate__plate{opacity:0; transform:scale(1.16); transition:opacity .75s ease, transform 1.2s var(--ease)}
+@keyframes sheen{0%{opacity:0; transform:translateX(-42%)} 30%{opacity:1} 100%{opacity:0; transform:translateX(46%)}}
+@keyframes shaft{0%{width:4px; opacity:0} 22%{opacity:1} 100%{width:172%; opacity:0}}
 
 /* ---------- responsive ---------- */
 @media (max-width:980px){
@@ -377,5 +564,12 @@ body.ready #curtain{opacity:0; visibility:hidden}
   .lantern{transform:none}
   .glow,.cone{opacity:1}
   #petals{display:none}
-  #curtain{display:none}
+  /* The gate is still shown — it is the invitation's front door — but it
+     is held still. The plate is visible immediately and the seal simply
+     removes it, with no parting, sheen, shaft or drifting light. */
+  .gate__eyebrow,.gate__mono,.gate__date,.seal{opacity:1}
+  .gate__rule i{transform:scaleX(1)}
+  .gate__rule b{opacity:1}
+  .gate__sheen,.gate__shaft,.gate__seam{display:none}
+  .gate__lights{filter:none; opacity:.42}
 }
