@@ -9,18 +9,32 @@ A one-page RSVP site for the homecoming reception of **Thisal & Sirithi**,
 26 September 2026, 7.00 p.m. onwards, The Lumina Ballroom, Cinnamon Life at
 City of Dreams. The page's single job is to get a guest to respond.
 
-Plain HTML, CSS and JS. **No framework, no build step, no dependencies, no
-package.json.** Do not introduce any of these unless I explicitly ask. Serve it
-with Live Server or `npx serve` and it runs.
+Plain HTML, CSS and JS. **No framework and no build step.** The page itself has
+no dependencies; do not give it any. There is now a `package.json`, but it exists
+only for the serverless functions in `api/`, and it holds exactly one entry —
+`@neondatabase/serverless`. Do not add a second, and do not add a build script.
+
+The page still opens straight from disk with Live Server or `npx serve`; the
+lookup and the RSVP just need `vercel dev` instead, because they talk to `api/`.
 
 ```
 index.html               markup + all copy
 css/styles.css           design tokens at :root, then sections in order
 js/main.js               ignition, petals, countdown, RSVP flow
-js/guests.js             the guest list, one entry per envelope
+js/guests.js             the guest list, one entry per envelope — local only,
+                         never deployed (see .vercelignore)
 assets/img/painting.webp the artwork with the lamps erased
 assets/img/lantern-0N.webp  the four lamps as transparent sprites
-server/apps-script.gs    optional Google Sheets backend
+api/lookup.js            GET  /api/lookup?q=  — finds a party
+api/rsvp.js              POST /api/rsvp       — stores a response
+api/responses.js         GET  /api/responses?key= — CSV export
+api/_db.js  api/_guests.js   helpers; the _ keeps Vercel from routing them
+scripts/schema.mjs       creates the tables
+scripts/seed-guests.mjs  pushes js/guests.js into the database
+scripts/check.mjs        prints what is in the database
+vercel.json              cache headers; framework null, no build step
+.vercelignore            what must not reach the internet
+server/apps-script.gs    the old Google Sheets backend, unused, kept as a fallback
 tools/extract_lanterns.py  regenerates the art if the illustration changes
 ```
 
@@ -102,15 +116,66 @@ read from `js/guests.js` in the browser.
 - Petals are a canvas: 22 particles, 12 on narrow screens. `new Petal(true)`
   is the upward burst used on a successful yes.
 - Countdown target: `new Date('2026-09-26T19:00:00+05:30')` — Sri Lanka time.
-- `sendResponse()` posts as `text/plain` on purpose; Google Apps Script cannot
-  answer a CORS preflight. The lookup is a bare `GET` for the same reason.
+- `sendResponse()` posts as `text/plain`. That was to dodge a CORS preflight
+  Apps Script could not answer; it is same-origin now so it no longer has to,
+  but `api/rsvp.js` reads the raw body either way. Left alone deliberately —
+  changing it buys nothing and risks the one path that matters.
 - RSVP is two steps: `#lookupview` (name on the envelope) then `#partyshell`
   (one Attending/Unable pair per person). `lookupParty()` is the only seam
   between the flow and the guest list — swap the source there, nothing else
-  changes. `norm()` in `js/main.js` and in `apps-script.gs` must stay identical
-  or local and remote matching disagree.
+  changes. `norm()` now exists in **three** places — `js/main.js`,
+  `api/_guests.js` and `apps-script.gs` — and all three must stay identical or
+  the browser and the server disagree about who a guest is.
 - Names from the list are written with `textContent`, never `innerHTML`.
 - **No localStorage or sessionStorage anywhere.** Keep it that way.
+
+## The backend — Vercel and Neon Postgres
+
+Deployed as Vercel project `homecoming-rsvp-thisal-and-sirithi` in team
+`harytw456-2764s-projects`, live at
+<https://homecoming-rsvp-thisal-and-sirithi.vercel.app>. The GitHub repo is
+connected, so a push to `main` deploys on its own.
+
+There is no framework and no build. Vercel serves the repo root as static files
+and turns each `api/*.js` into a function. `vercel.json` only sets cache headers.
+
+Three endpoints, all matching the contract the Sheets backend used, which is why
+wiring them up cost `js/main.js` two variables and nothing else:
+
+| route | does |
+| --- | --- |
+| `GET /api/lookup?q=` | `{parties:[{id,party,people}]}`. Aliases match but are never returned. |
+| `POST /api/rsvp` | validates, then one row in `responses` plus one per person in `response_people`. |
+| `GET /api/responses?key=` | CSV of everything, newest first. `ADMIN_KEY`. Never link to it. |
+
+`/api/rsvp` trusts nothing the browser says about itself: the party is fetched
+by id, the submitted names must match that party's people exactly, and `seats`
+and `invited` are recounted server-side. One invitation is capped at 20
+submissions. Every submission is kept — a party that answers twice keeps both,
+and the export marks the older one `superseded` rather than hiding it.
+
+Env vars, all set in production, preview and development:
+`DATABASE_URL` (injected by the Neon marketplace integration) and `ADMIN_KEY`
+(the export password — ask me for it, it is not in the repo).
+
+Working on the database:
+
+```
+vercel env pull .env.local   # after any env change
+npm run db:schema            # create tables; safe to re-run
+npm run db:seed              # push js/guests.js into the database
+npm run db:check             # what is in there now
+vercel dev                   # the page with api/ working, on :3000
+```
+
+**The guest list is not deployed.** `js/guests.js` is still the one place it is
+written by hand, but `.vercelignore` keeps it off the internet and `index.html`
+no longer loads it — so edit the file, run `npm run db:seed`, and the lookup
+follows. If you ever put that script tag back you must also drop the line from
+`.vercelignore`, or the lookup breaks.
+
+Note that preview and production share one Neon database. Test writes show up in
+the real responses; clear them when you are done.
 
 ## Quality floor
 
@@ -119,14 +184,19 @@ reduced motion honoured, no layout shift on load. Check these on any change.
 
 ## Still to do
 
-1. Set `RSVP_ENDPOINT` and confirm a real submission lands in the sheet.
-2. Replace the placeholder guest list in `js/guests.js` with the real one.
+1. ~~Set `RSVP_ENDPOINT`~~ — done. Points at `/api/rsvp`, and a real submission
+   was confirmed landing in Postgres and coming back out of the CSV export.
+2. Replace the placeholder guest list in `js/guests.js` with the real one, then
+   run `npm run db:seed`. **Until this is done the site will not find any real
+   guest.** This is the last thing standing between here and sending it out.
 3. Replace placeholder copy: the attire panel and the Google Maps link
    (needs the exact pin). Respond-by is 31 August 2026.
 4. Add Open Graph and Twitter tags so the link unfurls with the artwork on
    WhatsApp — this is how most guests will receive it.
 5. Self-host the three fonts in `assets/fonts/` to drop the external request.
 6. Decide on a favicon.
+7. Point a real domain at the Vercel project — the `.vercel.app` URL works, but
+   a short custom domain reads better in a WhatsApp message.
 
 ## How I want you to work
 

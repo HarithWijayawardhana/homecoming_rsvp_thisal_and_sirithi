@@ -2,15 +2,17 @@
    Thisal & Sirithi — homecoming reception
    ============================================================= */
 
-/* Paste your form endpoint here (see README).
+/* Where a response goes. '/api/rsvp' is the function in api/rsvp.js,
+   which writes to Neon Postgres (see README).
    Leave it empty and responses are only logged to the console. */
-var RSVP_ENDPOINT = '';
+var RSVP_ENDPOINT = '/api/rsvp';
 
 /* Where the name lookup gets its guest list.
    Empty  — matches are found in js/guests.js, in the browser.
-   Set it — the same /exec URL as above; the list stays in the sheet
-            and never ships to the page. Nothing else has to change. */
-var LOOKUP_ENDPOINT = '';
+   Set it — the list stays in the database and never ships to the
+            page. index.html no longer loads js/guests.js, so this
+            has to stay set. Nothing else has to change. */
+var LOOKUP_ENDPOINT = '/api/lookup';
 
 (function(){
   "use strict";
