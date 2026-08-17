@@ -10,7 +10,8 @@ A single-page RSVP site. No build step, no framework, no dependencies — open
 ├── css/
 │   └── styles.css              design tokens at the top, sections below
 ├── js/
-│   └── main.js                 lantern ignition, petals, countdown, RSVP
+│   ├── main.js                 lantern ignition, petals, countdown, RSVP
+│   └── guests.js               the guest list, one entry per envelope
 ├── assets/img/
 │   ├── painting.webp           the artwork with the lamps erased
 │   └── lantern-01..04.webp     the four lamps, cut out as sprites
@@ -77,23 +78,66 @@ or the group stops looking physical.
 
 ---
 
-## 3. Make the RSVP form actually send
+## 3. The RSVP flow
+
+The guest does not fill in a blank form. They type the name on their envelope,
+we find their invitation, and they answer for each person on it.
+
+1. **Find** — the name is normalised (lowercase, accents and punctuation
+   stripped) and matched against the party name, every person on it, and any
+   aliases. A surname on its own is enough. If two envelopes answer to the same
+   name, both are offered and the guest picks.
+2. **Answer** — one *Attending / Unable* pair per person, so a party of four can
+   send two. Contact details are asked for only if somebody is coming.
+3. **Seal** — the crimson seal, and a petal burst if anyone said yes.
+
+### The guest list
+
+`js/guests.js`, one entry per envelope:
+
+```js
+{
+  id: 'perera-01',
+  party: 'The Perera family',                 // the heading they see
+  people: ['Nimal Perera', 'Kumari Perera'],  // a row each
+  aliases: ['perera family']                  // optional extra spellings
+}
+```
+
+Only add an alias for something a guest might genuinely type that is not
+already in the entry — a nickname, a maiden name. First names and surnames
+already match on their own.
+
+**While the list lives in this file it ships to the browser**, so anyone can
+view-source and read every name. To keep it private, put the list in a
+`Guests` tab in the sheet and set `LOOKUP_ENDPOINT` (below) — matches are then
+found server-side and only the matching party is ever sent back.
+
+## 4. Make it actually send
 
 Right now responses are validated and logged to the console. Pick one route:
 
 ### Google Sheets (free, no account beyond Google)
 
-1. Create a sheet with headers: `Received | Name | Contact | Attending | Seats | Song | Notes | Message`
+1. Create a sheet with a `Responses` tab, headers:
+   `Received | Party | Name | Attending | Seats coming | Invited | Contact | Song | Notes | Message`
+   One row is written **per person**, so a party of four appears as four rows.
 2. **Extensions → Apps Script**, paste `server/apps-script.gs`, save.
 3. **Deploy → New deployment → Web app**. Execute as *Me*, access *Anyone*.
 4. Copy the `/exec` URL into the top of `js/main.js`:
 
 ```js
-var RSVP_ENDPOINT = 'https://script.google.com/macros/s/AKfy.../exec';
+var RSVP_ENDPOINT   = 'https://script.google.com/macros/s/AKfy.../exec';
+var LOOKUP_ENDPOINT = '';   // same URL to serve the guest list from the sheet
 ```
 
-The request is sent as `text/plain` on purpose — Apps Script cannot answer a
-CORS preflight, and this avoids one.
+The response is posted as `text/plain` on purpose — Apps Script cannot answer a
+CORS preflight, and this avoids one. The lookup is a plain `GET` for the same
+reason.
+
+To move the guest list off the page, add a `Guests` tab —
+`Id | Party | People | Aliases`, names comma separated — and set
+`LOOKUP_ENDPOINT` to the same `/exec` URL. `js/guests.js` is then ignored.
 
 ### Formspree / Netlify Forms / your own API
 
@@ -102,22 +146,30 @@ to `application/json` (Formspree also wants `Accept: application/json`). The
 payload shape is:
 
 ```json
-{ "name": "", "contact": "", "attending": "yes|no", "seats": "1",
-  "song": "", "notes": "", "message": "", "sentAt": "ISO date" }
+{ "partyId": "perera-01", "party": "The Perera family",
+  "name": "Nimal Perera, Kumari Perera",
+  "responses": [ { "name": "Nimal Perera",  "attending": "yes" },
+                 { "name": "Kumari Perera", "attending": "no"  } ],
+  "attending": "yes", "seats": 1, "invited": 2,
+  "contact": "", "song": "", "notes": "", "message": "", "sentAt": "ISO date" }
 ```
 
-Test with a real submission before the invitations go out, and check that a row
-actually appears.
+`attending` and `seats` summarise the party — `yes` if anyone is coming, and
+the head count — so a simple collector can ignore `responses` entirely.
+
+Test with a real submission before the invitations go out, and check that the
+rows actually appear.
 
 ---
 
-## 4. Content to change before launch
+## 5. Content to change before launch
 
 Search `index.html` for these:
 
 - **Attire panel** — currently "Formal & traditional / Wear the colour you feel
   best in". Placeholder.
-- **Respond-by date** — "5 September 2026" in the RSVP intro. Placeholder.
+- **Guest list** — `js/guests.js` still holds the five placeholder parties.
+- **Respond-by date** — "31 August 2026", under the lookup field.
 - **Directions link** — points at a Google Maps search for the venue. Swap in
   the exact map pin.
 - **Countdown target** — in `js/main.js`, `new Date('2026-09-26T19:00:00+05:30')`.
@@ -134,7 +186,7 @@ Consider adding an Open Graph image so the link unfurls with the artwork:
 
 ---
 
-## 5. Design tokens
+## 6. Design tokens
 
 At the top of `css/styles.css`:
 
@@ -152,7 +204,7 @@ offline.
 
 ---
 
-## 6. Deploy
+## 7. Deploy
 
 Any static host. No build command, publish directory is the project root.
 
@@ -165,7 +217,7 @@ Then point your domain at it and send the link.
 
 ---
 
-## 7. If you change the artwork
+## 8. If you change the artwork
 
 Run the extraction tool with the new illustration and update `COORDS` inside it
 to match where the lamps sit:

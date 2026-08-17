@@ -16,7 +16,8 @@ with Live Server or `npx serve` and it runs.
 ```
 index.html               markup + all copy
 css/styles.css           design tokens at :root, then sections in order
-js/main.js               ignition, petals, countdown, RSVP submit
+js/main.js               ignition, petals, countdown, RSVP flow
+js/guests.js             the guest list, one entry per envelope
 assets/img/painting.webp the artwork with the lamps erased
 assets/img/lantern-0N.webp  the four lamps as transparent sprites
 server/apps-script.gs    optional Google Sheets backend
@@ -91,8 +92,9 @@ add decorative lamps, sparkles, or bokeh.
 
 ## JavaScript notes
 
-`js/main.js` is one IIFE. `RSVP_ENDPOINT` is a top-level var above it —
-empty means responses are only logged.
+`js/main.js` is one IIFE. `RSVP_ENDPOINT` and `LOOKUP_ENDPOINT` are top-level
+vars above it — empty means responses are only logged and the guest list is
+read from `js/guests.js` in the browser.
 
 - `reduce` — every animation branch checks `prefers-reduced-motion`. Any new
   motion must respect it too.
@@ -101,7 +103,13 @@ empty means responses are only logged.
   is the upward burst used on a successful yes.
 - Countdown target: `new Date('2026-09-26T19:00:00+05:30')` — Sri Lanka time.
 - `sendResponse()` posts as `text/plain` on purpose; Google Apps Script cannot
-  answer a CORS preflight.
+  answer a CORS preflight. The lookup is a bare `GET` for the same reason.
+- RSVP is two steps: `#lookupview` (name on the envelope) then `#partyshell`
+  (one Attending/Unable pair per person). `lookupParty()` is the only seam
+  between the flow and the guest list — swap the source there, nothing else
+  changes. `norm()` in `js/main.js` and in `apps-script.gs` must stay identical
+  or local and remote matching disagree.
+- Names from the list are written with `textContent`, never `innerHTML`.
 - **No localStorage or sessionStorage anywhere.** Keep it that way.
 
 ## Quality floor
@@ -112,12 +120,13 @@ reduced motion honoured, no layout shift on load. Check these on any change.
 ## Still to do
 
 1. Set `RSVP_ENDPOINT` and confirm a real submission lands in the sheet.
-2. Replace placeholder copy: the attire panel, the respond-by date
-   (5 September 2026), and the Google Maps link (needs the exact pin).
-3. Add Open Graph and Twitter tags so the link unfurls with the artwork on
+2. Replace the placeholder guest list in `js/guests.js` with the real one.
+3. Replace placeholder copy: the attire panel and the Google Maps link
+   (needs the exact pin). Respond-by is 31 August 2026.
+4. Add Open Graph and Twitter tags so the link unfurls with the artwork on
    WhatsApp — this is how most guests will receive it.
-4. Self-host the three fonts in `assets/fonts/` to drop the external request.
-5. Decide on a favicon.
+5. Self-host the three fonts in `assets/fonts/` to drop the external request.
+6. Decide on a favicon.
 
 ## How I want you to work
 

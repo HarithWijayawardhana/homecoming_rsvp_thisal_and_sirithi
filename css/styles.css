@@ -25,6 +25,11 @@
 }
 
 *{box-sizing:border-box}
+[hidden]{display:none !important}
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
 html{scroll-behavior:smooth}
 body{
   margin:0;
@@ -130,6 +135,14 @@ header.top{padding:34px 0 0; text-align:center; position:relative; z-index:5}
 }
 .btn--solid::before{display:none}
 .btn--solid:hover{color:#FFF8F5; background-position:92% 0; box-shadow:0 12px 30px rgba(190,136,56,.34)}
+/* quiet ink button — the utility action, so the gold sweep stays the commitment */
+.btn--ink{
+  color:#FFF4EF; background:var(--ink); border-color:var(--ink);
+  transition:background-color .5s ease, border-color .5s ease, transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s ease;
+}
+.btn--ink::before{display:none}
+.btn--ink:hover{color:#FFF4EF; background:#2F1C1B; border-color:#2F1C1B; box-shadow:0 12px 28px rgba(67,42,40,.26)}
+.btn[disabled]{opacity:.55; pointer-events:none}
 :focus-visible{outline:2px solid var(--crimson); outline-offset:3px; border-radius:3px}
 
 /* ---------- artwork: the lanterns are live objects on chains ---------- */
@@ -225,7 +238,26 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
 .count .n{font-family:'Italiana',serif; font-size:clamp(32px,4.6vw,60px); line-height:1; color:var(--ink); font-variant-numeric:tabular-nums}
 .count .l{font-size:10px; letter-spacing:.32em; text-transform:uppercase; color:var(--muted); margin-top:12px}
 
-/* ---------- rsvp ---------- */
+/* ---------- rsvp: step one, find the invitation ---------- */
+/* deliberately unframed — the invitation card only appears once we find it */
+.lookup{display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center}
+.lookup__row{
+  display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-end;
+  gap:clamp(12px,1.4vw,18px); width:min(640px,100%);
+}
+.lookup__field{flex:1 1 260px; min-width:0}
+.lookup__field input{width:100%; font-size:17px; padding:14px 2px}
+.lookup__err{margin:0}
+.lookup__by{margin-top:clamp(24px,4vw,42px); margin-bottom:0}
+.choices{justify-content:center; margin-top:2px}
+
+/* Step one is a short block, and the section rhythm was set by the tall form
+   that used to live here — without this it leaves a void under the button.
+   The full spacing returns once the invitation is on screen. */
+#rsvp:has(#partyshell[hidden]){padding-bottom:clamp(30px,4vw,58px)}
+#rsvp:has(#partyshell[hidden]) + footer{padding-top:clamp(40px,5vw,78px)}
+
+/* ---------- rsvp: step two, who is coming ---------- */
 .rsvp-shell{
   position:relative; background:rgba(255,248,245,.62); backdrop-filter:blur(6px);
   border:var(--edge); border-radius:4px; padding:clamp(30px,4.6vw,68px);
@@ -255,7 +287,23 @@ textarea{resize:vertical; min-height:64px}
 }
 .seg button:hover{border-color:var(--gold); color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--crimson); border-color:var(--crimson); color:#FFF1EC}
-.seg.count-seg button{padding:11px 17px; min-width:48px}
+.seg button[data-v="no"][aria-pressed="true"]{background:var(--muted); border-color:var(--muted); color:#FFF4EF}
+
+/* the party, one line per name on the envelope */
+.party__head{display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; margin-bottom:clamp(24px,3.2vw,38px)}
+.party__head h3{font-family:'Italiana',serif; font-size:clamp(26px,3.6vw,44px); line-height:1.05}
+.party__head h3:focus{outline:0}
+.party__sub{font-family:'Marcellus',serif; color:#5C3E3A; max-width:44ch}
+.roster{list-style:none; margin:0; padding:0}
+.roster__row{
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 18px;
+  padding:clamp(14px,1.9vw,20px) 0; border-bottom:1px solid rgba(190,136,56,.24);
+}
+.roster__row:first-child{border-top:1px solid rgba(190,136,56,.24)}
+.roster__name{font-family:'Marcellus',serif; font-size:clamp(16px,1.8vw,20px); transition:color .4s ease}
+.roster__row.is-no .roster__name{color:var(--muted)}
+.party__extra{margin-top:clamp(26px,3.2vw,40px)}
+.foot-actions{display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px}
 .rsvp-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px; margin-top:clamp(28px,3.4vw,44px)}
 .note{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted)}
 .err{color:var(--crimson); font-family:'Marcellus',serif; font-size:14px; letter-spacing:0; text-transform:none; min-height:1.2em}
@@ -263,6 +311,7 @@ textarea{resize:vertical; min-height:64px}
 /* sealed confirmation */
 .sealed{display:none; text-align:center; flex-direction:column; align-items:center; gap:22px; padding:clamp(18px,3vw,40px) 0}
 .sealed.on{display:flex; animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.rsvp-shell.in{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 .seal{
   width:96px;height:96px;border-radius:50%; display:grid; place-items:center;
@@ -314,6 +363,13 @@ body.ready #curtain{opacity:0; visibility:hidden}
   .count{gap:0; justify-content:space-between}
   .rsvp-foot{flex-direction:column; align-items:stretch}
   .rsvp-foot .btn{justify-content:center}
+  .lookup__row{flex-direction:column; align-items:stretch}
+  .lookup__row .btn{justify-content:center}
+  .roster__row{flex-direction:column; align-items:flex-start; gap:12px}
+  .roster__seg{width:100%}
+  .roster__seg button{flex:1}
+  .foot-actions{flex-direction:column; align-items:stretch; width:100%}
+  .foot-actions .btn{justify-content:center}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none !important; transition-duration:.01ms !important}

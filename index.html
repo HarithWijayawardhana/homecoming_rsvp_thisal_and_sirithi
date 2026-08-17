@@ -35,7 +35,7 @@
       </div>
       <p class="venue reveal" data-d="4">The Lumina Ballroom<span>Cinnamon Life at City of Dreams</span></p>
       <div class="cta-row reveal" data-d="5">
-        <a class="btn btn--solid" href="#rsvp">Reserve your seat <span class="arw">&#8594;</span></a>
+        <a class="btn btn--solid" href="#rsvp">Find my invitation <span class="arw">&#8594;</span></a>
         <a class="btn btn--ghost" href="#evening">See the evening</a>
       </div>
     </div>
@@ -116,51 +116,53 @@
   <!-- ================= RSVP ================= -->
   <section id="rsvp">
     <div class="sechead">
-      <p class="eyebrow eyebrow--gold reveal">Répondez s'il vous plaît</p>
-      <h2 class="display reveal" data-d="1">Kindly respond</h2>
-      <p class="reveal" data-d="2">A seat is held under your name. Let us know by 5 September 2026 whether we should keep it warm.</p>
+      <p class="eyebrow eyebrow--gold reveal">One more thing</p>
+      <h2 class="display reveal" data-d="1">Will you be there?</h2>
+      <p class="reveal" data-d="2">Enter the name on your envelope and we will find your party.</p>
     </div>
 
-    <div class="rsvp-shell reveal" data-d="1">
-      <div id="formview">
-        <div class="grid">
-          <div class="field">
-            <label for="fname">Your name</label>
-            <input id="fname" type="text" placeholder="As it should appear on the seating card" autocomplete="name">
-          </div>
+    <!-- step one — find the invitation -->
+    <form class="lookup reveal" data-d="3" id="lookupview" autocomplete="off">
+      <div class="lookup__row">
+        <div class="field lookup__field">
+          <label class="sr-only" for="qname">Name on your envelope</label>
+          <input id="qname" type="text" placeholder="Name on your envelope"
+                 autocomplete="name" autocapitalize="words" enterkeyhint="search">
+        </div>
+        <button class="btn btn--ink" id="find" type="submit">Find my invitation</button>
+      </div>
+
+      <p class="err lookup__err" id="lookerr" role="status" aria-live="polite"></p>
+
+      <div class="seg choices" id="choices" role="group" aria-label="Which invitation is yours?" hidden></div>
+
+      <p class="note lookup__by">Kindly reply by 31 August 2026</p>
+    </form>
+
+    <!-- step two — answer for everyone on the envelope -->
+    <div class="rsvp-shell" id="partyshell" hidden>
+      <div id="partyview">
+        <div class="party__head">
+          <p class="note">Your invitation</p>
+          <h3 class="display" id="partyName" tabindex="-1"></h3>
+          <p class="party__sub" id="partySub"></p>
+        </div>
+
+        <ul class="roster" id="roster"></ul>
+
+        <div class="grid party__extra">
           <div class="field">
             <label for="femail">Email or phone</label>
             <input id="femail" type="text" placeholder="So we can send the details" autocomplete="email">
           </div>
-
-          <div class="field full">
-            <label>Will you be joining us?</label>
-            <div class="seg" id="attend" role="group" aria-label="Will you be joining us?">
-              <button type="button" data-v="yes" aria-pressed="false">Delighted to attend</button>
-              <button type="button" data-v="no"  aria-pressed="false">Regretfully unable</button>
-            </div>
-          </div>
-
-          <div class="field full" id="guestsField">
-            <label>Seats, including yours</label>
-            <div class="seg count-seg" id="guests" role="group" aria-label="Number of seats">
-              <button type="button" data-v="1" aria-pressed="true">1</button>
-              <button type="button" data-v="2" aria-pressed="false">2</button>
-              <button type="button" data-v="3" aria-pressed="false">3</button>
-              <button type="button" data-v="4" aria-pressed="false">4</button>
-              <button type="button" data-v="5+" aria-pressed="false">5+</button>
-            </div>
-          </div>
-
           <div class="field">
             <label for="fsong">A song to dance to</label>
             <input id="fsong" type="text" placeholder="Optional, but encouraged">
           </div>
-          <div class="field">
+          <div class="field full">
             <label for="fdiet">Anything we should know</label>
-            <input id="fdiet" type="text" placeholder="Dietary notes, access, a plus-one's name">
+            <input id="fdiet" type="text" placeholder="Dietary notes, access, a lift home">
           </div>
-
           <div class="field full">
             <label for="fmsg">A note for Thisal &amp; Sirithi</label>
             <textarea id="fmsg" rows="2" placeholder="Optional"></textarea>
@@ -169,15 +171,18 @@
 
         <div class="rsvp-foot">
           <p class="note err" id="err" role="status"></p>
-          <button class="btn btn--solid" id="send" type="button">Send your response <span class="arw">&#8594;</span></button>
+          <div class="foot-actions">
+            <button class="btn btn--ghost" id="notyou" type="button">Not your party?</button>
+            <button class="btn btn--solid" id="send" type="button">Confirm our response <span class="arw">&#8594;</span></button>
+          </div>
         </div>
       </div>
 
       <div class="sealed" id="sealed" role="status">
         <div class="seal">T&amp;S</div>
-        <h3 class="display" id="sealTitle">Your seat is saved</h3>
+        <h3 class="display" id="sealTitle">Your seats are saved</h3>
         <p id="sealBody">Thank you — the lanterns will be lit and the ballroom will be waiting. We will send the finer details closer to the day.</p>
-        <button class="btn btn--ghost" id="again" type="button">Send another response</button>
+        <button class="btn btn--ghost" id="again" type="button">Answer for another invitation</button>
       </div>
     </div>
   </section>
@@ -190,6 +195,7 @@
 
 </div>
 
+<script src="js/guests.js" defer></script>
 <script src="js/main.js" defer></script>
 </body>
 </html>
