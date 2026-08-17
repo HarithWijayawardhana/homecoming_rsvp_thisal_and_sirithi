@@ -12,7 +12,62 @@
 </head>
 <body>
 
-<div id="curtain"><span class="mono">T &amp; S</span></div>
+<!-- ================= THE GATE =================
+     Velvet that parts to reveal the invitation behind it. There is no
+     second page: the halves draw back off the real hero, so the painting
+     and its lanterns are the thing you arrive at, not a copy of it.
+     js/main.js removes this once it has opened. -->
+<div id="gate" role="dialog" aria-modal="true" aria-label="Invitation to Thisal and Sirithi's homecoming reception">
+
+  <div class="gate__ground" aria-hidden="true"></div>
+
+  <div class="gate__lights" aria-hidden="true">
+    <picture>
+      <source srcset="assets/img/gate-lights.avif" type="image/avif">
+      <img src="assets/img/gate-lights.jpg" alt="" decoding="async">
+    </picture>
+  </div>
+
+  <span class="gate__shaft" aria-hidden="true"></span>
+
+  <div class="gate__half gate__half--l" aria-hidden="true">
+    <div class="gate__fab">
+      <picture>
+        <source srcset="assets/img/gate-curtain.avif" type="image/avif">
+        <img src="assets/img/gate-curtain.jpg" alt="" fetchpriority="high">
+      </picture>
+    </div>
+    <span class="gate__sheen"></span>
+    <span class="gate__edge"></span>
+  </div>
+
+  <div class="gate__half gate__half--r" aria-hidden="true">
+    <div class="gate__fab">
+      <picture>
+        <source srcset="assets/img/gate-curtain.avif" type="image/avif">
+        <img src="assets/img/gate-curtain.jpg" alt="" fetchpriority="high">
+      </picture>
+    </div>
+    <span class="gate__sheen"></span>
+    <span class="gate__edge"></span>
+  </div>
+
+  <span class="gate__seam" aria-hidden="true"></span>
+  <div class="gate__vig" aria-hidden="true"></div>
+
+  <div class="gate__plate">
+    <p class="gate__eyebrow">Together with their families</p>
+    <p class="gate__mono">Thisal <span class="amp">&amp;</span> Sirithi</p>
+    <div class="gate__rule" aria-hidden="true"><i></i><b></b><i></i></div>
+    <p class="gate__date">26 . 09 . 2026</p>
+    <button class="seal" id="gateOpen" type="button">
+      <span class="seal__disc" aria-hidden="true"><span class="seal__mono">T&amp;S</span></span>
+      <span class="seal__label">Open the invitation</span>
+    </button>
+  </div>
+</div>
+<noscript><style>#gate{display:none}</style></noscript>
+
 <div class="grain" aria-hidden="true"></div>
 <canvas id="petals" aria-hidden="true"></canvas>
 

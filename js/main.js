@@ -18,12 +18,75 @@ var LOOKUP_ENDPOINT = '/api/lookup';
   "use strict";
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- curtain + lantern ignition ---------- */
-  window.addEventListener('load', function(){
+  /* ---------- the gate + lantern ignition ----------
+     The curtain draws back off the real hero, so opening it is also what
+     starts the page: `ready` runs the reveals and `lit` ignites the four
+     lamps in the painting, timed to land as the stage is uncovered. */
+  var gate = document.getElementById('gate'),
+      autoOpen = null;
+
+  function ignite(delay){
+    setTimeout(function(){
+      var art = document.getElementById('artwrap');
+      if(art) art.classList.add('lit');
+    }, delay);
+  }
+
+  function begin(){                       // hand the page over
+    document.body.classList.remove('gate-up');
     document.body.classList.add('ready');
-    setTimeout(function(){ document.getElementById('artwrap').classList.add('lit'); }, reduce ? 0 : 700);
-  });
-  setTimeout(function(){ document.body.classList.add('ready'); }, 2600); // safety net
+  }
+
+  function openGate(){
+    if(!gate || gate.dataset.open) return;
+    gate.dataset.open = '1';
+    clearTimeout(autoOpen);
+    gate.classList.add('gate--open');
+    begin();
+    goldBurst();                          // motes rising through the gap
+    ignite(reduce ? 0 : 1350);
+    setTimeout(function(){
+      gate.setAttribute('hidden','');
+      var h = document.querySelector('.hero__names');
+      if(h){ h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
+    }, reduce ? 60 : 2000);
+  }
+
+  if(!gate || location.hash){
+    /* A link straight to #rsvp skips the ceremony — the guest asked for
+       the form, not the front door. */
+    if(gate) gate.setAttribute('hidden','');
+    begin();
+    ignite(reduce ? 0 : 700);
+  } else {
+    document.body.classList.add('gate-up');
+    gate.addEventListener('click', openGate);
+    gate.addEventListener('keydown', function(e){ if(e.key === 'Escape') openGate(); });
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        var s = document.getElementById('gateOpen');
+        if(s && !gate.dataset.open) s.focus({preventScroll:true});
+      }, reduce ? 0 : 1600);
+    });
+    /* Nobody gets stranded on a page they did not realise was tappable.
+       Left to the guest when they have asked for reduced motion. */
+    if(!reduce) autoOpen = setTimeout(openGate, 9000);
+
+    if(!reduce && window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+      var pending = false, px = 0, py = 0;
+      gate.addEventListener('pointermove', function(e){
+        px = (e.clientX / window.innerWidth  - .5) * 2;
+        py = (e.clientY / window.innerHeight - .5) * 2;
+        if(pending) return;
+        pending = true;
+        requestAnimationFrame(function(){
+          pending = false;
+          gate.style.setProperty('--px', px.toFixed(3));
+          gate.style.setProperty('--py', py.toFixed(3));
+        });
+      });
+    }
+  }
 
   /* ---------- scroll reveals ---------- */
   var io = new IntersectionObserver(function(entries){
@@ -39,30 +102,40 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     W = cv.clientWidth; H = cv.clientHeight;
     cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
   }
-  function Petal(burst){
-    this.x = Math.random()*W;
-    this.y = burst ? H + 20 : Math.random()*-H;
-    this.vy = burst ? -(2.4+Math.random()*2.6) : .35 + Math.random()*.75;
-    this.vx = (Math.random()-.5)*.5;
-    this.r = 4 + Math.random()*6;
+  /* mode: falsy — the drifting petals. true — the burst on a yes.
+     'gold' — dust rising out of the curtain as it parts. */
+  function Petal(mode){
+    var gold = mode === 'gold';
+    this.gold = gold;
+    this.x = gold ? W*.5 + (Math.random()-.5)*W*.55 : Math.random()*W;
+    this.y = mode ? H + 20 : Math.random()*-H;
+    this.vy = gold ? -(1.1+Math.random()*1.9) : (mode ? -(2.4+Math.random()*2.6) : .35 + Math.random()*.75);
+    this.vx = (Math.random()-.5)*(gold ? .8 : .5);
+    this.r = gold ? 1.5 + Math.random()*3 : 4 + Math.random()*6;
     this.rot = Math.random()*Math.PI;
     this.spin = (Math.random()-.5)*.03;
     this.sw = Math.random()*Math.PI*2;
-    this.op = .35 + Math.random()*.4;
-    this.hue = Math.random() < .3 ? '#C9707A' : (Math.random() < .5 ? '#E8A9A6' : '#F2C6C0');
-    this.burst = !!burst;
+    this.op = gold ? .5 + Math.random()*.5 : .35 + Math.random()*.4;
+    this.hue = gold ? (Math.random() < .5 ? '#F5E7CB' : '#E3C186')
+                    : (Math.random() < .3 ? '#C9707A' : (Math.random() < .5 ? '#E8A9A6' : '#F2C6C0'));
+    this.burst = !!mode;
   }
   Petal.prototype.step = function(){
     this.sw += .02;
     this.y += this.vy;
     this.x += this.vx + Math.sin(this.sw)*.7;
     this.rot += this.spin;
-    if(this.burst){ this.vy += .045; this.op -= .004; }
+    if(this.burst){ this.vy += this.gold ? .011 : .045; this.op -= this.gold ? .0026 : .004; }
     if(this.y > H + 30 && !this.burst){ this.y = -20; this.x = Math.random()*W; }
   };
   Petal.prototype.draw = function(){
-    ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot);
+    ctx.save(); ctx.translate(this.x, this.y);
     ctx.globalAlpha = Math.max(0, this.op); ctx.fillStyle = this.hue;
+    if(this.gold){                       // dust, not a petal
+      ctx.beginPath(); ctx.arc(0, 0, this.r, 0, Math.PI*2); ctx.fill();
+      ctx.restore(); return;
+    }
+    ctx.rotate(this.rot);
     ctx.beginPath();
     ctx.moveTo(0, -this.r);
     ctx.bezierCurveTo(this.r, -this.r*.6, this.r*.75, this.r*.8, 0, this.r);
@@ -83,6 +156,14 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     for(var i=0;i<n;i++) petals.push(new Petal(false));
     requestAnimationFrame(loop);
     window.addEventListener('resize', size);
+  }
+
+  /* Dust carried up out of the parting. Called by openGate above —
+     hoisted, so it does not matter that it is declared down here. */
+  function goldBurst(){
+    if(reduce || !W) return;
+    var g = window.innerWidth < 700 ? 16 : 26;
+    for(var i=0;i<g;i++) petals.push(new Petal('gold'));
   }
 
   /* ---------- countdown ---------- */

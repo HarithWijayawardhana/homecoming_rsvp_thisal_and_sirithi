@@ -9,6 +9,11 @@
 # in index.html you must take this line out too, or the lookup will break.
 js/guests.js
 
+# Raw source images. The gate ships the cropped, compressed derivatives in
+# assets/img/gate-*; these originals are large and one of them carries a
+# stock watermark, so neither belongs on a public URL.
+new_images/
+
 # Local tooling and notes — no reason for these to be on the internet.
 scripts/
 tools/
