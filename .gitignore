@@ -12,3 +12,8 @@ node_modules/
 .agents/
 .claude/
 skills-lock.json
+
+# Duplicates the file sync leaves behind ("css 2/", ".gitignore 2"). They are
+# always copies of something already here; never commit one.
+* [0-9]
+* [0-9].*

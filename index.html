@@ -8,65 +8,33 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Italiana&family=Marcellus&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- The curtain opens onto this: fetch it while the drape is still drawing,
+     so the reveal has a decoded image to fade up and never lands on an
+     empty frame. -->
+<link rel="preload" as="image" href="assets/img/painting.webp" fetchpriority="high">
 <link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/curtain.css">
 </head>
 <body>
 
-<!-- ================= THE GATE =================
-     Velvet that parts to reveal the invitation behind it. There is no
-     second page: the halves draw back off the real hero, so the painting
-     and its lanterns are the thing you arrive at, not a copy of it.
-     js/main.js removes this once it has opened. -->
-<div id="gate" role="dialog" aria-modal="true" aria-label="Invitation to Thisal and Sirithi's homecoming reception">
+<!-- ================= THE CURTAIN =================
+     A splash screen. A tableau drape holds a title card until the
+     guest presses the button on it, is then drawn diagonally up and
+     out toward each panel's own upper outer corner, and flies off the
+     stage — js/curtain.js removes the whole overlay when it is done,
+     and the invitation is left unframed.
 
-  <div class="gate__ground" aria-hidden="true"></div>
+     data-cover is what stops the page flashing past before the module
+     has parsed: css/curtain.css paints the mount velvet on the first
+     frame, and the module (or js/main.js's safety net) takes the
+     attribute off again.
 
-  <div class="gate__lights" aria-hidden="true">
-    <picture>
-      <source srcset="assets/img/gate-lights.avif" type="image/avif">
-      <img src="assets/img/gate-lights.jpg" alt="" decoding="async">
-    </picture>
-  </div>
-
-  <span class="gate__shaft" aria-hidden="true"></span>
-
-  <div class="gate__half gate__half--l" aria-hidden="true">
-    <div class="gate__fab">
-      <picture>
-        <source srcset="assets/img/gate-curtain.avif" type="image/avif">
-        <img src="assets/img/gate-curtain.jpg" alt="" fetchpriority="high">
-      </picture>
-    </div>
-    <span class="gate__sheen"></span>
-    <span class="gate__edge"></span>
-  </div>
-
-  <div class="gate__half gate__half--r" aria-hidden="true">
-    <div class="gate__fab">
-      <picture>
-        <source srcset="assets/img/gate-curtain.avif" type="image/avif">
-        <img src="assets/img/gate-curtain.jpg" alt="" fetchpriority="high">
-      </picture>
-    </div>
-    <span class="gate__sheen"></span>
-    <span class="gate__edge"></span>
-  </div>
-
-  <span class="gate__seam" aria-hidden="true"></span>
-  <div class="gate__vig" aria-hidden="true"></div>
-
-  <div class="gate__plate">
-    <p class="gate__eyebrow">Together with their families</p>
-    <p class="gate__mono">Thisal <span class="amp">&amp;</span> Sirithi</p>
-    <div class="gate__rule" aria-hidden="true"><i></i><b></b><i></i></div>
-    <p class="gate__date">26 . 09 . 2026</p>
-    <button class="seal" id="gateOpen" type="button">
-      <span class="seal__disc" aria-hidden="true"><span class="seal__mono">T&amp;S</span></span>
-      <span class="seal__label">Open the invitation</span>
-    </button>
-  </div>
-</div>
-<noscript><style>#gate{display:none}</style></noscript>
+     There is no markup here on purpose. js/curtain.js is a standalone
+     module that injects everything it needs into this mount point, so
+     it can be lifted into another page whole. It talks to this one
+     only through the curtain:reveal and curtain:complete events. -->
+<div id="curtain-root" data-cover></div>
+<noscript><style>#curtain-root{display:none}</style></noscript>
 
 <div class="grain" aria-hidden="true"></div>
 <canvas id="petals" aria-hidden="true"></canvas>
@@ -252,6 +220,13 @@
 
 <!-- js/guests.js is deliberately not loaded: the guest list is served
      from the database by /api/lookup so it never reaches the page. -->
+<!-- GSAP is vendored rather than pulled from a CDN: the page is meant to
+     work offline in a Live Server and to make no third-party request. -->
+<script src="assets/js/gsap.min.js" defer></script>
 <script src="js/main.js" defer></script>
+<script type="module">
+  import { initCurtain } from './js/curtain.js';
+  initCurtain({ mount: '#curtain-root' });
+</script>
 </body>
 </html>

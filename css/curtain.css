@@ -1,0 +1,390 @@
+/* ============================================================
+   THE SPLASH CURTAIN
+   A full-screen title card that opens on a tableau drape: each
+   panel is drawn diagonally up and out toward its own upper outer
+   corner on tieback cords, leaving a tall pointed arch, and then
+   flies off the stage. It does not stay — js/curtain.js removes
+   the whole overlay from the document when it is done, and the
+   invitation underneath is left with no inset and no frame.
+
+   Everything here is drawn: pleats are gradients, the swag and
+   the braid and the cords are inline SVG. No raster image is
+   involved.
+
+   js/curtain.js owns the choreography and injects the markup.
+   This file owns the look, and holds no transition on any
+   property the timeline writes — a transition on a tweened
+   property lags a frame behind and smears it.
+
+   Blush and gold, deliberately: the invitation it opens onto is a
+   watercolour in the same key, and a theatre red would read as a
+   different building.
+   ============================================================ */
+
+:root{
+  /* fabric */
+  --cur-deep:#6F2F3C;
+  --cur-shadow:#4A1C26;
+  --cur-gold:#D3AB63;
+  --cur-gold-hi:#F4E1B0;
+  --cur-lining:#F2E7E6;  /* the reverse of the cloth, seen at the turn */
+
+  /* The mid and highlight tones of the velvet are not tokens: every place
+     they appear they are sitting *over* the cloth with an alpha that is
+     doing the shading, and a flat colour would knock the fold out of the
+     gradient. The swag's are in the SVG, which has its own gradient. */
+
+  --cur-swag:20vh;       /* the swag's depth at the belly of its sag */
+}
+
+/* ---- the cover ----
+   The mount point paints velvet on the first frame, before this
+   module has parsed, so the guest never sees the invitation flash
+   past on the way to the splash that is supposed to introduce it.
+   js/curtain.js drops the attribute when the splash leaves, and
+   js/main.js's safety net drops it too — a script that fails to
+   load must not leave the page behind a blank screen. */
+#curtain-root[data-cover]{
+  position:fixed; inset:0; z-index:90;
+  background:var(--cur-shadow);
+}
+
+.curtain{
+  position:fixed; inset:0; z-index:90;
+  height:100vh;
+  height:100dvh;                        /* mobile: the live viewport */
+  overflow:hidden;
+  contain:layout paint;
+}
+/* Once the arch is open the drape is scenery, not a surface. Clicks,
+   taps and scrolls belong to the page underneath while it leaves. */
+.curtain.is-open{pointer-events:none}
+/* Held while the curtain is up; released when it is removed. */
+body.curtain-up{overflow:hidden; overscroll-behavior:none}
+
+/* the defs carrier — never painted */
+.curtain__defs{position:absolute; width:0; height:0; overflow:hidden}
+
+/* ---- the bloom ----
+   Warm light behind the cloth, brightening as the opening widens and
+   gone by the time the page is legible, so it lights the reveal
+   without tinting the page it reveals. */
+.curtain__bloom{
+  position:absolute; inset:0; pointer-events:none; z-index:1;
+  /* Tall and narrow, hugging the opening rather than washing the whole
+     frame: this is light coming through the parting, and a broad glow
+     over the page reads as fog on the thing the curtain just revealed. */
+  background:
+    radial-gradient(19% 62% at 50% 46%,
+      rgba(244,225,176,.85) 0%,
+      rgba(211,171,99,.34) 40%,
+      rgba(162,84,95,.10) 68%,
+      rgba(111,47,60,0) 82%);
+  opacity:.10;
+}
+
+/* ---- the vignette ----
+   Only for the title card: it gives the closed house depth and puts
+   the light on the monogram. It is tweened away during the draw,
+   because the same darkness over the invitation would read as a
+   filter laid on the artwork. */
+.curtain__vig{
+  position:absolute; inset:0; z-index:4; pointer-events:none;
+  background:radial-gradient(72% 58% at 50% 44%,
+    rgba(30,9,15,0) 0%, rgba(30,9,15,.34) 62%, rgba(24,7,12,.72) 100%);
+}
+
+/* ---- the panels ----
+   Four nested elements, because four different things happen:
+     .curtain__panel   travels and tilts   (translate + rotation)
+     .curtain__gather  gathers the cloth   (scaleX from the outer edge)
+     .curtain__sheet   carries the overhang past the panel's box
+     .curtain__cloth   is cut by the arch  (clip-path)
+   The tie hangs in the panel but outside the gather, so it rides the
+   travel without being squashed by it. */
+.curtain__panel{
+  position:absolute; top:0; bottom:0; width:52%; z-index:2;
+}
+.curtain__panel--l{left:0;  transform-origin:0 0}
+.curtain__panel--r{right:0; transform-origin:100% 0}
+
+.curtain__gather{position:absolute; inset:0}
+.curtain__panel--l .curtain__gather{transform-origin:0 50%}
+.curtain__panel--r .curtain__gather{transform-origin:100% 50%}
+
+/* The bleed box. The cloth runs past the panel's outer edge because the
+   cue leans the panels inward a few pixels, and it runs past the top and
+   bottom because the draw tilts each panel about its top outer corner —
+   without the overhang the lift shows as a wedge of page in the corners.
+   The braid shares this box so that the cut and the trim are expressed
+   in one coordinate system. */
+.curtain__sheet{position:absolute; top:-2%; bottom:-12%}
+.curtain__panel--l .curtain__sheet{left:-18px; right:0}
+.curtain__panel--r .curtain__sheet{right:-18px; left:0}
+
+/* The cloth. The drop-shadow is on this element rather than the panel
+   because a filter follows the clipped silhouette — so the shadow
+   tracks the arch edge as it is cut, which is what makes the two
+   panels read as separate cloth rather than one printed backdrop. */
+.curtain__cloth{
+  position:absolute; inset:0; overflow:hidden;
+  background-color:var(--cur-deep);
+  background-image:
+    /* The light in this room comes through the parting, so each panel is
+       lit from its inner edge and falls away into its own wing. Without
+       these two the pleats tile evenly across the whole width and the
+       cloth reads as corrugation rather than as a hung drape. */
+    radial-gradient(116% 74% at var(--cur-lit) 6%,
+      rgba(255,216,198,.17) 0%, rgba(255,216,198,.05) 38%, rgba(255,216,198,0) 62%),
+    linear-gradient(to var(--cur-out),
+      rgba(34,10,16,.62) 0%, rgba(34,10,16,.24) 18%, rgba(34,10,16,0) 42%),
+    /* the fold nearest the gap turns away from the light */
+    linear-gradient(to var(--cur-in,right),
+      rgba(74,28,38,0) 62%, rgba(74,28,38,.34) 88%, rgba(74,28,38,.66) 100%),
+    /* head and hem */
+    linear-gradient(to bottom,
+      rgba(74,28,38,.78) 0%, rgba(74,28,38,.16) 8%,
+      rgba(74,28,38,0) 27%, rgba(74,28,38,.14) 72%,
+      rgba(74,28,38,.70) 100%),
+    /* a broad undulation across the cloth, at a period that shares no
+       factor with the pleats, so the tiling never lines up */
+    repeating-linear-gradient(90deg,
+      rgba(244,225,176,.05) 0px,
+      rgba(74,28,38,0) 71px,
+      rgba(74,28,38,.13) 116px,
+      rgba(74,28,38,0) 187px),
+    /* the pleats. Stop widths are deliberately uneven — evenly spaced
+       stops read as a striped gradient, not as cloth. */
+    repeating-linear-gradient(90deg,
+      var(--cur-shadow) 0px,
+      rgba(74,28,38,.55) 6px,
+      var(--cur-deep) 15px,
+      rgba(215,154,162,.55) 22px,
+      rgba(162,84,95,.5) 29px,
+      var(--cur-deep) 41px,
+      var(--cur-shadow) 52px,
+      var(--cur-deep) 63px,
+      rgba(215,154,162,.34) 74px,
+      var(--cur-deep) 86px,
+      var(--cur-shadow) 99px);
+  /* Two shadows, in this order, and the order is the point. The first
+     is not a shadow at all — a zero-blur pale offset toward the centre
+     draws the lining the cloth turns back on, and because a filter
+     follows the clipped silhouette it hugs the waist exactly as the
+     cord pulls the cloth in. The second then falls beyond that band,
+     so the page is shaded by the lining rather than by the velvet. */
+  filter:
+    drop-shadow(calc(var(--cur-dir) * 13px) 0 0 var(--cur-lining))
+    drop-shadow(calc(var(--cur-dir) * 4px) 3px 13px rgba(74,28,38,.5));
+}
+.curtain__panel--l{--cur-dir:1;  --cur-in:right; --cur-lit:98%; --cur-out:left}
+.curtain__panel--r{--cur-dir:-1; --cur-in:left;  --cur-lit:2%;  --cur-out:right}
+/* one panel must not be the other panel's cloth twice over */
+.curtain__panel--r .curtain__cloth{
+  background-position:0 0, 0 0, 37px 0, 0 0, 19px 0, 37px 0;
+}
+
+/* ---- the raking light ----
+   One pass, one direction, clipped with the cloth so it stops at the
+   arch edge instead of hanging in the opening. */
+.curtain__sheen{
+  position:absolute; top:-14%; bottom:-14%; left:0; width:38%;
+  pointer-events:none; opacity:0;
+  background:linear-gradient(104deg,
+    rgba(244,225,176,0)   0%,
+    rgba(244,225,176,.10) 38%,
+    rgba(255,246,224,.19) 50%,
+    rgba(244,225,176,.08) 62%,
+    rgba(244,225,176,0)   100%);
+}
+
+/* ---- the braid ----
+   Gold trim sewn down the leading edge. It is a sibling of the cloth
+   rather than a child: the cloth's pale lining drop-shadow would print
+   a second, ghosted trim thirteen pixels inboard of the real one. Its
+   path is written by the same call that writes the cut, so it cannot
+   drift off the edge it belongs to. */
+.curtain__braid{
+  position:absolute; inset:0; width:100%; height:100%;
+  overflow:visible; pointer-events:none;
+}
+
+/* ---- the tieback ----
+   Gold cord looped round the panel at the waist, two tassels on
+   uneven drops so they lag out of step with one another. */
+.curtain__tie{
+  position:absolute; top:57%; width:clamp(62px,7.2vw,94px); height:auto;
+  overflow:visible; pointer-events:none; z-index:3;
+}
+/* On the waist itself: the cord has to sit where the cloth is pinched,
+   or it reads as jewellery rather than as the cause of the pinch. `top`
+   is set off the waist row of EDGE — move one without the other and the
+   cord floats off the pinch it is there to explain.
+
+   Both the width and the inset are set by the drape at its narrowest,
+   not by the drape on the closed title card: by the time the gather has
+   pulled the cloth in, a cord sized to the closed panel is wider than
+   the cloth it is tied around. */
+.curtain__panel--l .curtain__tie{left:14.5%}
+.curtain__panel--r .curtain__tie{right:14.5%}
+/* The tassels swing from the knot, not from the top of the cord — a
+   fill-box origin would drift as the group's bounding box changes, so
+   both pivots are given in viewBox units. */
+.curtain__tie-swing{transform-box:view-box; transform-origin:60px 40px}
+.curtain__tie-cord {transform-box:view-box; transform-origin:60px 12px}
+
+/* ---- the swag ----
+   A festoon: caught at both ends and sagging in the middle. It is a
+   pelmet, not a panel — it stays put while the panels are drawn out
+   from under it, and it flies out at the end. Everything about its
+   shape lives in the SVG (js/curtain.js, swagSVG); all this rule does
+   is hang it. */
+.curtain__swag{
+  /* width, not left+right: an <svg> is a replaced element, so with
+     width:auto it takes its intrinsic size and quietly ignores `right`
+     — which leaves the swag a few hundred pixels wide in the corner. */
+  position:absolute; left:-1%; width:102%; top:0;
+  height:var(--cur-swag); min-height:88px; z-index:3;
+  pointer-events:none; overflow:visible;
+  filter:drop-shadow(0 7px 15px rgba(41,14,20,.55));
+}
+
+/* ---- the title card ----
+   The only reason a splash screen earns the guest's three seconds:
+   it has to say something before it opens. Monogram and date, in the
+   page's own faces, lit from behind by the bloom. */
+.curtain__title{
+  position:absolute; left:50%; top:47%; z-index:5;
+  transform:translate(-50%,-50%);
+  width:min(560px, 84vw);
+  display:flex; flex-direction:column; align-items:center;
+  text-align:center; pointer-events:none;
+  text-shadow:0 2px 22px rgba(30,9,15,.55);
+  /* Stated, not left at `none`: the cue tweens this to blur(7px), and
+     there is no interpolation out of a keyword. */
+  filter:blur(0px);
+}
+.curtain__eyebrow{
+  margin:0; font-family:'Jost',system-ui,sans-serif; font-weight:400;
+  font-size:clamp(9px,1.05vw,11.5px); letter-spacing:.42em;
+  text-transform:uppercase; color:var(--cur-gold);
+}
+.curtain__mono{
+  margin:clamp(16px,2.4vw,26px) 0 0;
+  font-family:'Italiana',serif; font-weight:400;
+  font-size:clamp(56px,12vw,132px); line-height:1;
+  letter-spacing:.14em; text-indent:.14em;   /* balance the trailing track */
+  color:var(--cur-gold-hi);
+}
+.curtain__mono i{font-style:normal; color:var(--cur-gold); opacity:.86}
+.curtain__rule{
+  display:flex; align-items:center; gap:14px;
+  width:min(280px,62%); margin:clamp(16px,2.2vw,24px) 0 0;
+}
+.curtain__rule i{
+  flex:1; height:1px;
+  background:linear-gradient(90deg,rgba(211,171,99,0),rgba(211,171,99,.8),rgba(211,171,99,0));
+}
+.curtain__rule b{
+  width:6px; height:6px; display:block;
+  background:var(--cur-gold); transform:rotate(45deg);
+}
+.curtain__date{
+  margin:clamp(14px,1.9vw,20px) 0 0;
+  font-family:'Jost',system-ui,sans-serif; font-weight:300;
+  font-size:clamp(10px,1.15vw,13px); letter-spacing:.34em;
+  text-transform:uppercase; color:var(--cur-gold-hi);
+}
+
+/* ---- the button that opens it ----
+   The last line of the title card and the only part of it a guest can
+   touch, so it sits in the card's own column rather than off in a
+   corner: the card asks, and the answer is directly under the question.
+   The card is pointer-events:none — this one child takes them back. */
+.curtain__enter{
+  margin:clamp(22px,3vw,34px) 0 0; z-index:6;
+  display:inline-flex; align-items:center; gap:9px;
+  min-height:44px; padding:12px 26px; border-radius:2px;
+  font-family:'Jost',sans-serif; font-size:11px;
+  letter-spacing:.34em; text-transform:uppercase;
+  color:rgba(244,225,176,.9);
+  background:rgba(74,28,38,.42);
+  border:1px solid rgba(211,171,99,.5);
+  cursor:pointer; pointer-events:auto;
+  -webkit-tap-highlight-color:transparent;
+  backdrop-filter:blur(3px);
+  transition:background .25s ease, color .25s ease, border-color .25s ease;
+}
+.curtain__enter::after{
+  content:''; width:15px; height:1px; background:currentColor; opacity:.7;
+}
+.curtain__enter:hover{background:rgba(74,28,38,.62); border-color:rgba(211,171,99,.85)}
+/* data-cued is the same treatment, set by js/curtain.js when it moves
+   focus here as the card lands. Focus arriving by script does not match
+   :focus-visible, and a button that holds focus without showing it is a
+   keyboard guest waiting for a Tab that has already happened. It is
+   dropped on the first pointer move, so a mouse user never sees it. */
+.curtain__enter:focus-visible,
+.curtain__enter[data-cued]{
+  outline:2px solid var(--cur-gold-hi); outline-offset:3px;
+  background:rgba(74,28,38,.72); color:var(--cur-gold-hi);
+}
+/* A browser with no input yet — which is every browser at the moment the
+   card lands — counts script-moved focus as focus-visible, so a phone
+   would wear the keyboard ring it can never use. The primary pointer is
+   the honest test: coarse means there is nothing to reassure. */
+@media (pointer:coarse){
+  .curtain__enter:focus,
+  .curtain__enter:focus-visible{
+    outline:none; background:rgba(74,28,38,.42); color:rgba(244,225,176,.9);
+  }
+}
+
+/* Disabled the moment it is pressed, so the press cannot be repeated
+   into a running timeline. It is on its way out with the card by then —
+   nothing should look like it went grey. */
+.curtain__enter[disabled]{cursor:default}
+
+/* ---- performance ----
+   The panels are promoted only while they are moving. js/curtain.js
+   adds .is-drawing for the length of the sequence and the element is
+   removed at the end — a permanent will-change would hold two
+   full-screen layers for the life of the page. */
+.curtain.is-drawing .curtain__panel,
+.curtain.is-drawing .curtain__gather{will-change:transform}
+.curtain.is-drawing .curtain__cloth{will-change:clip-path}
+
+/* The transform-only fallback, switched on if rewriting the cut cannot
+   hold frame rate. It is snapped open once and the travel alone carries
+   the draw. */
+.curtain.is-degraded .curtain__cloth{will-change:auto}
+
+/* ---- reduced motion ----
+   The title card, the button, and a cross-fade when it is pressed, and
+   nothing else: the curtain never parts and nothing travels.
+   js/curtain.js takes this branch too and never builds the draw. */
+.curtain.is-still .curtain__sheen{display:none}
+@media (prefers-reduced-motion:reduce){
+  .curtain__bloom{opacity:.18}
+}
+
+/* ---- narrow ----
+   A shallower pelmet and a tighter cord, because 20vh of swag over a
+   700px-tall phone is a third of the title card's room.
+   js/curtain.js reads the same breakpoint for its geometry. */
+@media (max-width:700px){
+  :root{--cur-swag:13vh}
+  /* The button is most of the column at this width and the tiebacks are
+     pulled in to 7%, so directly under the date it sits on the knots.
+     It goes below them instead — which means the card has to stop being
+     centred on its own box first: centred, every pixel the button is
+     pushed down lifts the monogram by half of one, and the two never
+     separate. Pinned, the drop is the margin and nothing else moves. */
+  .curtain__title{top:38%; transform:translate(-50%,0)}
+  .curtain__enter{margin-top:clamp(84px,18vh,170px)}
+  .curtain__tie{width:clamp(58px,15vw,84px)}
+  .curtain__panel--l .curtain__tie{left:7%}
+  .curtain__panel--r .curtain__tie{right:7%}
+  .curtain__vig{background:radial-gradient(86% 52% at 50% 44%,
+    rgba(30,9,15,0) 0%, rgba(30,9,15,.32) 62%, rgba(24,7,12,.7) 100%)}
+}
