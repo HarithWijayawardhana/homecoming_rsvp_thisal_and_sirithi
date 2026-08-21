@@ -18,81 +18,118 @@ var LOOKUP_ENDPOINT = '/api/lookup';
   "use strict";
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- the gate + lantern ignition ----------
-     The curtain draws back off the real hero, so opening it is also what
-     starts the page: `ready` runs the reveals and `lit` ignites the four
-     lamps in the painting, timed to land as the stage is uncovered. */
-  var gate = document.getElementById('gate'),
-      autoOpen = null;
+  /* ---------- the page behind the curtain ----------
+     js/curtain.js owns the drape and nothing else. This is the other
+     half of that contract: the page holds its hero back, waits for the
+     curtain's `reveal` event, and then brings it up — the arch fading
+     and scaling in from 0.96, the lamps catching, and the copy
+     staggering after them.
 
-  function ignite(delay){
-    setTimeout(function(){
-      var art = document.getElementById('artwrap');
-      if(art) art.classList.add('lit');
-    }, delay);
+     Two events rather than one shared timeline, deliberately. The
+     curtain module stays liftable into another page, and this file
+     never reaches inside it.
+
+     The hero is hidden at load, not at reveal: the arch is already
+     open by then, so setting opacity to 0 at that point would be a
+     visible blink rather than a fade. */
+  var STATE = window.__homecoming || (window.__homecoming = {});
+  var G = window.gsap;
+  var still = reduce || !G;
+
+  var artwrap   = document.getElementById('artwrap'),
+      heroItems = [].slice.call(document.querySelectorAll('.hero .reveal')),
+      form      = document.getElementById('lookupview'),
+      formItems = form ? [].slice.call(form.children) : [];
+
+  /* Hand an element to GSAP: the CSS reveal transitions the same two
+     properties a tween is about to write every frame, so it is opted
+     out (data-g, which the observer below skips) and shown. */
+  function claim(list){
+    list.forEach(function(el){ el.setAttribute('data-g','1'); el.classList.add('in'); });
   }
 
-  function begin(){                       // hand the page over
-    document.body.classList.remove('gate-up');
+  if(!still){
+    claim(heroItems);
+    if(form) claim([form]);
+    G.set(heroItems, {opacity:0, y:26});
+    if(artwrap) G.set(artwrap, {opacity:0, scale:0.96});
+  }
+
+  function revealHero(){
+    if(STATE.heroRevealed) return;
+    STATE.heroRevealed = true;
     document.body.classList.add('ready');
-  }
 
-  function openGate(){
-    if(!gate || gate.dataset.open) return;
-    gate.dataset.open = '1';
-    clearTimeout(autoOpen);
-    gate.classList.add('gate--open');
-    begin();
-    goldBurst();                          // motes rising through the gap
-    ignite(reduce ? 0 : 1350);
-    setTimeout(function(){
-      gate.setAttribute('hidden','');
-      var h = document.querySelector('.hero__names');
-      if(h){ h.setAttribute('tabindex','-1'); h.focus({preventScroll:true}); }
-    }, reduce ? 60 : 2000);
-  }
-
-  if(!gate || location.hash){
-    /* A link straight to #rsvp skips the ceremony — the guest asked for
-       the form, not the front door. */
-    if(gate) gate.setAttribute('hidden','');
-    begin();
-    ignite(reduce ? 0 : 700);
-  } else {
-    document.body.classList.add('gate-up');
-    gate.addEventListener('click', openGate);
-    gate.addEventListener('keydown', function(e){ if(e.key === 'Escape') openGate(); });
-    window.addEventListener('load', function(){
-      setTimeout(function(){
-        var s = document.getElementById('gateOpen');
-        if(s && !gate.dataset.open) s.focus({preventScroll:true});
-      }, reduce ? 0 : 1600);
-    });
-    /* Nobody gets stranded on a page they did not realise was tappable.
-       Left to the guest when they have asked for reduced motion. */
-    if(!reduce) autoOpen = setTimeout(openGate, 9000);
-
-    if(!reduce && window.matchMedia('(hover:hover) and (pointer:fine)').matches){
-      var pending = false, px = 0, py = 0;
-      gate.addEventListener('pointermove', function(e){
-        px = (e.clientX / window.innerWidth  - .5) * 2;
-        py = (e.clientY / window.innerHeight - .5) * 2;
-        if(pending) return;
-        pending = true;
-        requestAnimationFrame(function(){
-          pending = false;
-          gate.style.setProperty('--px', px.toFixed(3));
-          gate.style.setProperty('--py', py.toFixed(3));
-        });
-      });
+    if(still){
+      if(artwrap) artwrap.classList.add('lit');
+      armForm();
+      return;
     }
+
+    G.timeline()
+      .to(artwrap, {opacity:1, scale:1, duration:.95, ease:'power2.out',
+                    clearProps:'transform,opacity'}, 0)
+      .to(heroItems, {opacity:1, y:0, duration:.55, stagger:.07, ease:'power2.out',
+                      clearProps:'opacity,transform'}, .12)
+      .add(function(){ if(artwrap) artwrap.classList.add('lit'); }, .3)
+      .add(function(){ goldBurst(); }, 0)      // motes rising through the arch
+      .add(armForm, .85);
   }
+
+  /* The RSVP form is several screens below the fold when the curtain
+     finishes, so its stagger is armed rather than fired: it plays when
+     the form actually comes into view. Running it on a section nobody
+     is looking at spends the animation for nothing. A guest who
+     arrived at #rsvp gets it straight away. */
+  function armForm(){
+    if(still || !form || STATE.formRevealed) return;
+    if(form.getBoundingClientRect().top < window.innerHeight * .85){ revealForm(); return; }
+    G.set(formItems, {opacity:0, y:18});
+    var fio = new IntersectionObserver(function(en){
+      if(en[0].isIntersecting){ fio.disconnect(); revealForm(); }
+    }, {threshold:.25});
+    fio.observe(form);
+  }
+
+  function revealForm(){
+    if(STATE.formRevealed) return;
+    STATE.formRevealed = true;
+    G.fromTo(formItems, {opacity:0, y:18},
+      {opacity:1, y:0, duration:.6, stagger:.075, ease:'power2.out',
+       clearProps:'opacity,transform'});
+  }
+
+  document.addEventListener('curtain:reveal', revealHero);
+
+  /* A link straight to #rsvp asked for the form, not the front door. */
+  if(location.hash) revealHero();
+
+  /* The safety net. js/curtain.js is an ES module, and a module that
+     fails to load fails silently — without this the hero would stay
+     hidden behind a splash screen that never arrived, under a mount
+     point painting velvet over the whole viewport. Nothing about the
+     page may depend on the decoration in front of it.
+
+     It tests curtainArmed, not the clock alone: the curtain waits at
+     its title card until the guest presses the button, and a guest who
+     takes their time over the monogram must not have it pulled away
+     from them. The flag is set the moment the module has its markup in
+     the document, so the failure this net is for never sets it. */
+  setTimeout(function(){
+    if(!STATE.heroRevealed && !STATE.curtainArmed){
+      document.body.classList.remove('curtain-up');
+      var root = document.getElementById('curtain-root');
+      if(root){ root.removeAttribute('data-cover'); root.innerHTML = ''; }
+      revealHero();
+    }
+  }, 4500);
 
   /* ---------- scroll reveals ---------- */
   var io = new IntersectionObserver(function(entries){
     entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
   }, {threshold:.16, rootMargin:'0px 0px -8% 0px'});
-  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  /* [data-g] elements belong to the reveal timeline, not to this. */
+  document.querySelectorAll('.reveal:not([data-g])').forEach(function(el){ io.observe(el); });
 
 
   /* ---------- petals ---------- */
