@@ -43,7 +43,7 @@
      it can be lifted into another page whole. It talks to this one
      only through the curtain:reveal and curtain:complete events. -->
 <div id="curtain-root" data-cover></div>
-<noscript><style>#curtain-root{display:none}</style></noscript>
+<noscript><style>#curtain-root{display:none}.sound{display:none}</style></noscript>
 
 <div class="grain" aria-hidden="true"></div>
 <canvas id="petals" aria-hidden="true"></canvas>
@@ -67,6 +67,37 @@
     <a class="nav__rsvp" href="#rsvp">RSVP</a>
   </div>
 </nav>
+
+<!-- ================= THE SCORE =================
+     The toggle for the background music. A persistent mark rather than a
+     control in the page's grammar: it is neither an action (.btn, a pill)
+     nor a choice (.seg, a square), so it borrows neither shape.
+
+     It cannot ride the nav rail, which only arrives once the hero has gone
+     past — music that starts as the curtain opens with no way to silence it
+     until the guest scrolls is a defect. So it is fixed in the corner from
+     body.ready onwards, wearing the rail's own ground and hairline so the
+     page has one floating chrome rather than two.
+
+     It ships looking off and saying "Play music". js/main.js turns it on
+     when the track actually starts, and a play() the browser refuses leaves
+     it exactly as it is: a button that will work when it is pressed. -->
+<button class="sound" type="button" data-off aria-label="Play music">
+  <!-- A quaver, not a loudspeaker. A stroked speaker cone is a blur at
+       15px, and a note says "music" on an invitation where a speaker says
+       "player controls". Struck through when it is silent, and the flag
+       goes as the slash arrives: three strokes plus a diagonal inside 16
+       pixels congeal into a blot, and head-plus-stem still reads as a
+       note. -->
+  <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor"
+       stroke-width="1.3" stroke-linecap="round" aria-hidden="true" focusable="false">
+    <ellipse cx="5.1" cy="11.5" rx="2.7" ry="2.1" fill="currentColor" stroke="none"
+             transform="rotate(-20 5.1 11.5)"/>
+    <path d="M7.8 11.5V2.9"/>
+    <path class="sound__flag" d="M7.8 2.9c2.9.6 3.9 2.4 3.3 4.3"/>
+    <path class="sound__slash" d="M2.4 13.6 13.6 2.4" stroke-width="1.4"/>
+  </svg>
+</button>
 
 <div class="wrap">
 
@@ -369,6 +400,13 @@
      from the database by /api/lookup so it never reaches the page. -->
 <!-- GSAP is vendored rather than pulled from a CDN: the page is meant to
      work offline in a Live Server and to make no third-party request. -->
+<!-- The score. preload="none" so three megabytes do not compete with the
+     painting and the three fonts at load: it starts buffering only when the
+     guest opens the invitation. No autoplay attribute — autoplay with sound
+     is blocked in every engine, and with JS off there would be no way to
+     stop it (the noscript rule above hides the toggle for the same reason). -->
+<audio id="score" src="assets/audio/theme.mp3" loop preload="none"></audio>
+
 <script src="assets/js/gsap.min.js" defer></script>
 <script src="js/main.js" defer></script>
 <script type="module">

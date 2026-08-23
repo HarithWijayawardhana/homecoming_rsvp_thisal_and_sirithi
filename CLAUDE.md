@@ -12,7 +12,8 @@ City of Dreams. The page's single job is to get a guest to respond.
 Plain HTML, CSS and JS. **No framework and no build step.** The page has exactly
 one front-end dependency, GSAP, which drives the curtain reveal and nothing else.
 It is **vendored** at `assets/js/gsap.min.js` and loaded with a plain script tag:
-no CDN, no npm entry, no bundler. Do not add a second front-end dependency, and
+no CDN, no npm entry, no bundler. The background music is a plain `<audio>`
+element and a WebAudio gain node — platform APIs, not a second dependency. Do not add a second front-end dependency, and
 do not reach for a build step to manage this one. There is also a `package.json`,
 but it exists only for the serverless functions in `api/`, and it holds exactly
 one entry — `@neondatabase/serverless`. Do not add a second there either.
@@ -44,6 +45,8 @@ assets/img/orn-spray.webp
 assets/img/orn-foot.webp
 assets/img/lantern-0N.webp  the four lamps as transparent sprites
 assets/js/gsap.min.js    GSAP 3.13.0, vendored — the only front-end dependency
+assets/audio/theme.mp3   the background music, verbatim as it was handed
+                         over; the source folder stays local (.gitignore)
 api/lookup.js            GET  /api/lookup?q=  — finds a party
 api/rsvp.js              POST /api/rsvp       — stores a response
 api/responses.js         GET  /api/responses?key= — CSV export
@@ -513,6 +516,34 @@ read from `js/guests.js` in the browser.
   `api/_guests.js` and `apps-script.gs` — and all three must stay identical or
   the browser and the server disagree about who a guest is.
 - Names from the list are written with `textContent`, never `innerHTML`.
+- **The background music starts on the guest's first gesture, and that is
+  deliberate.** `assets/audio/theme.mp3` is a looping `<audio id="score">`
+  with `preload="none"` — three megabytes must not compete with the painting
+  and the three fonts at load. `js/main.js` starts it from a one-shot
+  capturing `pointerdown`/`keydown` listener on the document, which under
+  the curtain *is* the "Open the invitation" press, so the music comes up
+  with the draw. A first-gesture start rather than a third curtain event:
+  the module's seam stays `curtain:reveal` and `curtain:complete`, and this
+  also covers every path that skips the splash (a hash in the URL, a repeat
+  run, a back/forward restore, the 4.5s safety net), where the track simply
+  waits for a tap or for the button. The toggle is excluded from that
+  listener on purpose — without the exclusion, pressing "Play music" on an
+  untouched page would turn the music on and its own handler would turn it
+  straight back off.
+- **The level goes through a WebAudio gain, not `score.volume`.** iOS Safari
+  makes `volume` read-only, so a level set or a fade through the element is
+  silently a no-op on a large part of this guest list. `createMediaElementSource`
+  may be called only once per element, which is what the `ctx !== null` guard
+  is protecting; `ctx === false` means WebAudio was missing or threw and the
+  element's own `volume` is the fallback. `LEVEL` (0.45) is the knob to turn
+  if it is too loud — turn it, not the file.
+- The toggle (`.sound`) is fixed in the corner and appears on `body.ready`
+  alone. It cannot ride the nav rail: that only arrives once the hero has
+  gone past, and music with no way to silence it until the guest scrolls is
+  a defect. It wears the rail's own ground, blur and hairline, and it is a
+  circle because it is neither an action nor a choice and so borrows neither
+  the pill nor the square. The `<noscript>` block hides it — with no JS
+  nothing plays, and a dead button is worse than none.
 - **No localStorage or sessionStorage anywhere.** Keep it that way.
 
 ## The backend — Vercel and Neon Postgres

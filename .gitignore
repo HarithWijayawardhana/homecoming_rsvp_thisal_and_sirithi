@@ -27,6 +27,11 @@ js/guests.js
 # the way tools/ keeps its source material off the deployment.
 new_image/
 
+# The track as it was handed over, under its WhatsApp name. The deployed
+# copy is assets/audio/theme.mp3 and is byte-for-byte the same file, so
+# nothing is lost by keeping this one local.
+new_background_music/
+
 # Duplicates the file sync leaves behind ("css 2/", ".gitignore 2"). They are
 # always copies of something already here; never commit one.
 * [0-9]

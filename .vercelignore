@@ -12,6 +12,11 @@ js/guests.js
 # The spreadsheet js/guests.js was transcribed from — same reason.
 new_guest_list/
 
+# The track under its WhatsApp name. assets/audio/theme.mp3 is the same
+# file byte for byte and is the one the page loads; there is no reason to
+# upload three megabytes of it twice.
+new_background_music/
+
 # Local tooling and notes — no reason for these to be on the internet.
 scripts/
 tools/

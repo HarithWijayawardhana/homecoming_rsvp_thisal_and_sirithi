@@ -291,6 +291,137 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     history.replaceState(null, '', location.pathname + location.search);
   });
 
+  /* ---------- the score ----------
+     One looping <audio> element and one button, and between them a rule:
+     nothing plays until the guest has touched the page.
+
+     It starts on the first gesture, and under the curtain that gesture is
+     the "Open the invitation" press — so the music comes up *with* the draw
+     rather than after it. A one-shot document listener rather than a third
+     curtain event: js/curtain.js speaks through curtain:reveal and
+     curtain:complete, and nothing may reach inside it. The side benefit is
+     that this also covers every path that skips the splash — a hash in the
+     URL, a repeat run, a back/forward restore, the 4.5s safety net — where
+     there is no press to hang anything on and the track simply waits for
+     the guest's first tap, or for the button.
+
+     The level goes through a WebAudio gain rather than score.volume,
+     because iOS Safari makes volume read-only: a level set or a fade
+     through the element is silently a no-op on a good part of this guest
+     list. It is a platform API, not a dependency — the page still has
+     exactly one front-end dependency — and if AudioContext is missing or
+     throws we fall back to the element and lose only the fade.
+
+     No storage anywhere: a guest who has silenced the music has silenced it
+     for this page session, the same way the curtain runs once. */
+  var score = document.getElementById('score'),
+      sound = document.querySelector('.sound');
+
+  if(score && sound){
+    var LEVEL = 0.45,                // under the room, not in it
+        FADE  = 1.2;                 // seconds, both ways
+
+    var wants = false,               // what the guest has asked for
+        armed = false,               // the page has been touched
+        /* audioCtx, not ctx: the petal canvas already holds a `var ctx`
+           at this IIFE's scope, and a second one here would blank it.
+           null: not built yet. false: no WebAudio, use the element. */
+        audioCtx = null, audioGain = null,
+        stopFade = 0;
+
+    /* Built on the first play rather than at load: by then the page has
+       sticky activation, so the context starts running instead of
+       suspended. createMediaElementSource may be called only once per
+       element, which is what the audioCtx guard is really protecting. */
+    function graph(){
+      if(audioCtx !== null) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      try{
+        if(!AC) throw 0;
+        audioCtx  = new AC();
+        audioGain = audioCtx.createGain();
+        audioGain.gain.value = 0;
+        audioCtx.createMediaElementSource(score).connect(audioGain).connect(audioCtx.destination);
+      }catch(e){
+        audioCtx = false; audioGain = null;
+        score.volume = LEVEL;        // desktop only; iOS ignores this
+      }
+    }
+
+    /* A track that arrives at full level reads as a mistake, and one that
+       stops dead reads as a fault, so both ends are ramped. With no gain
+       node there is nothing to ramp and the pause has to be immediate: a
+       1.2s wait would just be 1.2s of music after the guest said stop. */
+    function ramp(to, then){
+      if(!audioGain){ if(then) then(); return; }
+      var t = audioCtx.currentTime;
+      audioGain.gain.cancelScheduledValues(t);
+      audioGain.gain.setValueAtTime(audioGain.gain.value, t);
+      audioGain.gain.linearRampToValueAtTime(to, t + FADE);
+      if(then) stopFade = setTimeout(then, FADE * 1000);
+    }
+
+    function mark(){
+      if(wants) sound.removeAttribute('data-off');
+      else sound.setAttribute('data-off','');
+      sound.setAttribute('aria-label', wants ? 'Mute music' : 'Play music');
+    }
+
+    /* One place decides what the element is doing, from two facts: what the
+       guest asked for, and whether the tab is in front of them. Music out of
+       a tab nobody is looking at is the thing everyone hates about a page
+       like this. */
+    function apply(){
+      clearTimeout(stopFade);
+      if(wants && !document.hidden){
+        graph();
+        if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        var p = score.play();
+        /* A refused play() is not an error, it is a page the guest has not
+           touched yet. Fall back to off, and their press starts it — a
+           press being a gesture, that always works. */
+        if(p && p['catch']) p['catch'](function(){ wants = false; mark(); });
+        ramp(LEVEL);
+      }else{
+        ramp(0, function(){ score.pause(); });
+      }
+      mark();
+    }
+
+    function drop(){
+      document.removeEventListener('pointerdown', first, true);
+      document.removeEventListener('keydown', first, true);
+    }
+    /* The toggle is excluded, and the exclusion is the whole point: a press
+       on it is a first gesture too, and if this ran the button would turn
+       the music on a tenth of a second before its own handler turned it
+       off — a guest pressing "Play music" would get silence. Leave that
+       press to the handler below, which knows which way it means. */
+    function first(e){
+      if(armed) return;
+      if(e && e.target && e.target.closest && e.target.closest('.sound')) return;
+      armed = true; drop();
+      wants = true;
+      apply();
+    }
+    /* Capture, and on the document: the press that matters belongs to the
+       curtain's own button, which this file may not touch. */
+    document.addEventListener('pointerdown', first, true);
+    document.addEventListener('keydown', first, true);
+
+    sound.addEventListener('click', function(){
+      armed = true; drop();
+      wants = !wants;
+      apply();
+    });
+
+    document.addEventListener('visibilitychange', function(){
+      if(armed) apply();
+    });
+
+    mark();
+  }
+
   /* ---------- rsvp, step one: find the invitation ---------- */
   var $ = function(id){ return document.getElementById(id); };
 
