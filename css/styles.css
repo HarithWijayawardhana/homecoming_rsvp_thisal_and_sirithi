@@ -743,8 +743,8 @@ input:focus{outline:0; border-bottom-color:var(--gold)}
 .seg{display:flex; flex-wrap:wrap; gap:10px}
 .seg button{
   font-family:'Jost',sans-serif; font-size:11px; letter-spacing:.22em; text-transform:uppercase;
-  padding:13px 20px; border:1px solid rgba(150,115,109,.35); background:transparent; color:var(--muted);
-  border-radius:999px; cursor:pointer; transition:.4s cubic-bezier(.2,.7,.2,1);
+  padding:13px 20px; border:var(--edge); background:transparent; color:var(--muted);
+  border-radius:2px; cursor:pointer; transition:.4s cubic-bezier(.2,.7,.2,1);
 }
 .seg button:hover{border-color:var(--gold); color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--crimson); border-color:var(--crimson); color:#FFF1EC}
