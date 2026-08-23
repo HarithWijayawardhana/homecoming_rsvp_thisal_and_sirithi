@@ -382,6 +382,14 @@ body.flare .glow{animation:flare 2.4s ease-in-out}
 section{padding-block:var(--sp); scroll-margin-top:40px}
 .sechead{display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; margin-bottom:clamp(46px,6vw,86px)}
 .sechead h2{font-family:'Italiana',serif; font-size:clamp(34px,5vw,66px); line-height:1}
+/* The story head's label is its heading — the display line under it was
+   saying the same thing twice. It stays an <h2> so the outline and the nav
+   rail still have a section title; this rule wins .eyebrow's type back from
+   the line above and sizes the label to lead a section on its own. */
+.sechead h2.eyebrow--lead{
+  font-family:'Jost',sans-serif; font-weight:400;
+  font-size:clamp(13px,1.7vw,19px); letter-spacing:.42em; line-height:1.4;
+}
 .sechead p{font-family:'Marcellus',serif; color:var(--ink-2); max-width:46ch; font-size:clamp(14px,1.4vw,17px)}
 
 /* ---------- the invitation ----------
@@ -600,7 +608,6 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
 .cd .count{margin-top:clamp(38px,5vw,64px)}
 .cd .count .n{color:var(--gold-3)}
 .cd .count .l{color:rgba(245,231,203,.6)}
-.cd__by{margin-top:clamp(34px,4.4vw,56px); color:rgba(245,231,203,.66)}
 
 /* ---------- the place ---------- */
 /* It closes the page now, on the same blush as the footer, so its own bottom

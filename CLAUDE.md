@@ -565,7 +565,7 @@ reduced motion honoured, no layout shift on load. Check these on any change.
 2. Replace the placeholder guest list in `js/guests.js` with the real one, then
    run `npm run db:seed`. **Until this is done the site will not find any real
    guest.** This is the last thing standing between here and sending it out.
-3. Replace placeholder copy. Respond-by is 31 August 2026.
+3. Replace placeholder copy. Respond-by is 10 September 2026.
    ~~The map~~ — done, and it is now a **Google iframe**, not a drawn plate.
    It is the page's one third-party request; everything else, GSAP included,
    is vendored. The trade was deliberate: a guest wants to pan, zoom and get
