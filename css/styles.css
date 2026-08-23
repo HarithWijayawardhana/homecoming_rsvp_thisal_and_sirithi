@@ -388,7 +388,12 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
    the line above and sizes the label to lead a section on its own. */
 .sechead h2.eyebrow--lead{
   font-family:'Jost',sans-serif; font-weight:400;
-  font-size:clamp(13px,1.7vw,19px); letter-spacing:.42em; line-height:1.4;
+  font-size:clamp(15px,2.2vw,26px); letter-spacing:.42em; line-height:1.4;
+  /* Letter-spacing paints a trailing gap after the last letter, and that gap
+     rides inside the centred line box — so the glyphs sit half a gap left of
+     true centre. At 11.5px that is invisible; at 26px it is 5.5px under a
+     centred ornament. One tracking unit of first-line indent cancels it. */
+  text-indent:.42em;
 }
 .sechead p{font-family:'Marcellus',serif; color:var(--ink-2); max-width:46ch; font-size:clamp(14px,1.4vw,17px)}
 
