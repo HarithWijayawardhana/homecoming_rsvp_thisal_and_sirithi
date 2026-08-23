@@ -492,8 +492,6 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     lookupview.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'center'});
   }
 
-  $('notyou').addEventListener('click', backToLookup);
-
   function sendResponse(payload){
     if(!RSVP_ENDPOINT){
       console.log('RSVP (no endpoint set):', payload);
