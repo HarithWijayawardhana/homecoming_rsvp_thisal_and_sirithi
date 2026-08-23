@@ -526,12 +526,6 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     var coming  = people.filter(function(_, i){ return answers[i] === 'yes'; });
     var staying = people.filter(function(_, i){ return answers[i] === 'no'; });
 
-    var contact = $('femail').value.trim();
-    if(coming.length && !contact){
-      err.textContent = 'Add an email or phone number so we can reach you.';
-      $('femail').focus();
-      return;
-    }
     err.textContent = '';
 
     var payload = {
@@ -542,10 +536,6 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       attending: coming.length ? 'yes' : 'no',
       seats: coming.length,
       invited: people.length,
-      contact: contact,
-      song: $('fsong').value.trim(),
-      notes: $('fdiet').value.trim(),
-      message: $('fmsg').value.trim(),
       sentAt: new Date().toISOString()
     };
 
@@ -564,8 +554,5 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       });
   });
 
-  $('again').addEventListener('click', function(){
-    ['femail','fsong','fdiet','fmsg'].forEach(function(id){ $(id).value = ''; });
-    backToLookup();
-  });
+  $('again').addEventListener('click', backToLookup);
 })();

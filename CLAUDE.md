@@ -524,6 +524,14 @@ wiring them up cost `js/main.js` two variables and nothing else:
 | `POST /api/rsvp` | validates, then one row in `responses` plus one per person in `response_people`. |
 | `GET /api/responses?key=` | CSV of everything, newest first. `ADMIN_KEY`. Never link to it. |
 
+The form asks for nothing but the answers. It used to also collect a contact,
+a song, a dietary note and a message; all four were removed from `index.html`
+and from the payload `js/main.js` builds. The `contact`/`song`/`notes`/`message`
+columns are still in the `responses` table and still in the CSV export, and
+`clip()` in `api/rsvp.js` writes `''` into each — nothing is broken by their
+absence, and dropping columns is the one change that cannot be undone. Leave
+them unless you are sure.
+
 `/api/rsvp` trusts nothing the browser says about itself: the party is fetched
 by id, the submitted names must match that party's people exactly, and `seats`
 and `invited` are recounted server-side. One invitation is capped at 20

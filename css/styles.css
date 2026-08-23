@@ -731,18 +731,15 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
 }
 .rsvp-shell::before{top:9px; left:9px; border-right:0; border-bottom:0}
 .rsvp-shell::after{bottom:9px; right:9px; border-left:0; border-top:0}
-.grid{display:grid; grid-template-columns:1fr 1fr; gap:clamp(20px,2.6vw,34px)}
 .field{display:flex; flex-direction:column; gap:9px}
-.field.full{grid-column:1/-1}
 label{font-size:10.5px; letter-spacing:.3em; text-transform:uppercase; color:var(--muted)}
-input,textarea{
+input{
   font-family:'Marcellus',serif; font-size:16px; color:var(--ink);
   background:transparent; border:0; border-bottom:1px solid rgba(150,115,109,.35);
   padding:11px 2px; transition:border-color .45s ease;
 }
-input::placeholder,textarea::placeholder{color:rgba(150,115,109,.5)}
-input:focus,textarea:focus{outline:0; border-bottom-color:var(--gold)}
-textarea{resize:vertical; min-height:64px}
+input::placeholder{color:rgba(150,115,109,.5)}
+input:focus{outline:0; border-bottom-color:var(--gold)}
 .seg{display:flex; flex-wrap:wrap; gap:10px}
 .seg button{
   font-family:'Jost',sans-serif; font-size:11px; letter-spacing:.22em; text-transform:uppercase;
@@ -766,7 +763,6 @@ textarea{resize:vertical; min-height:64px}
 .roster__row:first-child{border-top:1px solid rgba(190,136,56,.24)}
 .roster__name{font-family:'Marcellus',serif; font-size:clamp(16px,1.8vw,20px); transition:color .4s ease}
 .roster__row.is-no .roster__name{color:var(--muted)}
-.party__extra{margin-top:clamp(26px,3.2vw,40px)}
 .foot-actions{display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px}
 .rsvp-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px; margin-top:clamp(28px,3.4vw,44px)}
 .note{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted)}
@@ -820,7 +816,6 @@ footer{padding:var(--sp) 0 70px; text-align:center}
   .hero__copy{max-width:none; align-items:center; text-align:center}
   .rule{margin-inline:auto}
   .hero__line{margin-inline:auto}
-  .grid{grid-template-columns:1fr}
 }
 
 /* The timeline's own breakpoint. Below this the centre thread moves to a
