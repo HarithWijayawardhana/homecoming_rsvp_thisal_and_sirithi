@@ -448,8 +448,8 @@ var LOOKUP_ENDPOINT = '/api/lookup';
         ', and your answer is kept below. Change whatever has changed and send it again.';
     } else {
       $('partySub').textContent = people.length === 1
-        ? 'One seat is held in your name. Tell us whether we should keep it warm.'
-        : count(people.length) + ' seats are held in your name. Tell us who will fill them.';
+        ? 'A seat is held in your name — let us know if we should keep it warm.'
+        : count(people.length) + ' seats are held in your name — let us know who will fill them.';
     }
 
     sendLabel = again ? 'Update our response <span class="arw">&#8594;</span>' : sendDefault;
