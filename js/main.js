@@ -392,9 +392,10 @@ var LOOKUP_ENDPOINT = '/api/lookup';
   var WORDS = ['no','One','Two','Three','Four','Five','Six','Seven','Eight'];
   function count(n){ return WORDS[n] || String(n); }
 
-  function personRow(name, i){
+  function personRow(name, i, pre){
     var li = document.createElement('li');
     li.className = 'roster__row';
+    if(pre === 'no') li.classList.add('is-no');
 
     var label = document.createElement('span');
     label.className = 'roster__name';
@@ -410,7 +411,7 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       b.type = 'button';
       b.dataset.v = pair[0];
       b.dataset.i = i;
-      b.setAttribute('aria-pressed','false');
+      b.setAttribute('aria-pressed', pair[0] === pre ? 'true' : 'false');
       b.textContent = pair[1];
       seg.appendChild(b);
     });
@@ -419,18 +420,44 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     return li;
   }
 
+  /* the day an earlier answer was sent, for the line above the roster */
+  function answeredOn(iso){
+    var d = new Date(iso || '');
+    if(isNaN(d.getTime())) return '';
+    try { return d.toLocaleDateString(undefined, {day:'numeric', month:'long'}); }
+    catch(e){ return ''; }
+  }
+
   function showParty(p){
     party = p; answers = {};
     var people = p.people || [];
 
+    /* /api/lookup hands back the party's most recent response, one
+       'yes' / 'no' / null per name. A guest who has answered before
+       should find the roster as they left it, not blank. */
+    var pre = Array.isArray(p.answers) ? p.answers : [];
+    var again = false;
+    people.forEach(function(_, i){
+      if(pre[i] === 'yes' || pre[i] === 'no'){ answers[i] = pre[i]; again = true; }
+    });
+
     $('partyName').textContent = p.party || people.join(' & ');
-    $('partySub').textContent = people.length === 1
-      ? 'One seat is held in your name. Tell us whether we should keep it warm.'
-      : count(people.length) + ' seats are held in your name. Tell us who will fill them.';
+    if(again){
+      var on = answeredOn(p.answeredAt);
+      $('partySub').textContent = 'You answered' + (on ? ' on ' + on : ' already') +
+        ', and your answer is kept below. Change whatever has changed and send it again.';
+    } else {
+      $('partySub').textContent = people.length === 1
+        ? 'One seat is held in your name. Tell us whether we should keep it warm.'
+        : count(people.length) + ' seats are held in your name. Tell us who will fill them.';
+    }
+
+    sendLabel = again ? 'Update our response <span class="arw">&#8594;</span>' : sendDefault;
+    sendBtn.innerHTML = sendLabel;
 
     var ul = $('roster');
     ul.innerHTML = '';
-    people.forEach(function(name, i){ ul.appendChild(personRow(name, i)); });
+    people.forEach(function(name, i){ ul.appendChild(personRow(name, i, pre[i])); });
 
     $('err').textContent = '';
     $('sealed').classList.remove('on');
@@ -508,7 +535,8 @@ var LOOKUP_ENDPOINT = '/api/lookup';
   }
 
   var sendBtn = $('send');
-  var sendLabel = sendBtn.innerHTML;
+  var sendDefault = sendBtn.innerHTML;   // "Confirm our response"
+  var sendLabel = sendDefault;           // showParty swaps it for a repeat answer
 
   sendBtn.addEventListener('click', function(){
     if(!party) return;

@@ -529,7 +529,7 @@ wiring them up cost `js/main.js` two variables and nothing else:
 
 | route | does |
 | --- | --- |
-| `GET /api/lookup?q=` | `{parties:[{id,party,people}]}`. Aliases match but are never returned. |
+| `GET /api/lookup?q=` | `{parties:[{id,party,people,answers?,answeredAt?}]}`. Aliases match but are never returned. |
 | `POST /api/rsvp` | validates, then one row in `responses` plus one per person in `response_people`. |
 | `GET /api/responses?key=` | CSV of everything, newest first. `ADMIN_KEY`. Never link to it. |
 
@@ -540,6 +540,18 @@ columns are still in the `responses` table and still in the CSV export, and
 `clip()` in `api/rsvp.js` writes `''` into each — nothing is broken by their
 absence, and dropping columns is the one change that cannot be undone. Leave
 them unless you are sure.
+
+**A party that has answered finds its answer waiting.** `/api/lookup` returns
+`answers` — the party's most recent response, one `'yes'` / `'no'` / null per
+name, in `people` order — and `showParty()` in `js/main.js` seeds the roster
+from it, changes the line above it, and relabels the button "Update our
+response". Aligned by index on the server so the browser never matches names a
+second time. The party list is cached for 60s inside the function; the answers
+deliberately are **not**, because a guest who sends a response and searches
+again a moment later has to see what they just sent. Re-answering was always
+allowed — every submission is kept and the export marks the older one
+`superseded` — this just stops the roster reading as though nothing had been
+said.
 
 `/api/rsvp` trusts nothing the browser says about itself: the party is fetched
 by id, the submitted names must match that party's people exactly, and `seats`
