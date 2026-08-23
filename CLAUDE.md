@@ -556,6 +556,18 @@ second time. The party list is cached for 60s inside the function; the answers
 deliberately are **not**, because a guest who sends a response and searches
 again a moment later has to see what they just sent.
 
+**One row in `responses` is what "answered" means, on both sides.**
+`/api/lookup` sets `answeredAt` from that row and `showParty()` keys the
+read-only view off `answeredAt` — not off the per-name answers — because
+`/api/rsvp` counts the same rows when it refuses a second submission. The join
+to `response_people` is a **left** join for exactly this reason: a response
+whose per-name rows are missing still reads as answered, and the roster shows
+an em dash for the name it cannot report. With an inner join the browser
+offered a form the server then refused, and the guest had no way out of it.
+**So clear test data with `delete from responses`** — the children cascade.
+Deleting `response_people` on its own leaves the parents behind and locks
+those invitations out.
+
 `/api/rsvp` trusts nothing the browser says about itself: the party is fetched
 by id, the submitted names must match that party's people exactly, and `seats`
 and `invited` are recounted server-side. `MAX_PER_PARTY` is **1** — a second

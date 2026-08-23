@@ -34,9 +34,18 @@ async function allParties() {
   return rows;
 }
 
-/* The latest response for each of the given parties, as
+/* The response for each of the given parties, as
    { partyId: { at, byName: { normalised name: 'yes' | 'no' } } }.
-   Every submission is kept, so "latest" is the highest id. */
+   An invitation is answered once; "latest" is the highest id in case
+   an older list is ever unlocked.
+
+   The join to response_people is a LEFT join, and that is the whole
+   point of it: a party is answered because a row exists in
+   `responses`, which is exactly what /api/rsvp counts when it refuses
+   a second one. An inner join makes the two disagree the moment a
+   response has no per-name rows — the browser offers a form and the
+   server then refuses it, which is a dead end with nothing on screen
+   to explain it. */
 async function latestAnswers(ids) {
   if (!ids.length) return {};
 
@@ -49,13 +58,13 @@ async function latestAnswers(ids) {
     )
     select l.party_id, l.received_at, p.name, p.attending
     from latest l
-    join response_people p on p.response_id = l.id
+    left join response_people p on p.response_id = l.id
   `;
 
   var out = {};
   rows.forEach(function (r) {
     var e = out[r.party_id] || (out[r.party_id] = { at: r.received_at, byName: {} });
-    e.byName[norm(r.name)] = r.attending ? 'yes' : 'no';
+    if (r.name != null) e.byName[norm(r.name)] = r.attending ? 'yes' : 'no';
   });
   return out;
 }

@@ -407,7 +407,7 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     if(locked){
       var ans = document.createElement('span');
       ans.className = 'roster__ans';
-      ans.textContent = pre === 'yes' ? 'Coming' : 'Can\u2019t come';
+      ans.textContent = pre === 'yes' ? 'Coming' : pre === 'no' ? 'Can\u2019t come' : '\u2014';
       li.appendChild(label); li.appendChild(ans);
       return li;
     }
@@ -447,9 +447,14 @@ var LOOKUP_ENDPOINT = '/api/lookup';
        'yes' / 'no' / null per name. A guest who has answered before
        should find the roster as they left it, not blank. */
     var pre = Array.isArray(p.answers) ? p.answers : [];
-    var again = false;
+    /* answeredAt, not the answers themselves, is what says this
+       invitation is spent — it is set from the same `responses` row
+       /api/rsvp counts when it refuses a second submission, so the
+       two cannot disagree and strand a guest in front of a form the
+       server will not take. */
+    var again = !!p.answeredAt;
     people.forEach(function(_, i){
-      if(pre[i] === 'yes' || pre[i] === 'no'){ answers[i] = pre[i]; again = true; }
+      if(pre[i] === 'yes' || pre[i] === 'no') answers[i] = pre[i];
     });
 
     $('partyName').textContent = p.party || people.join(' & ');
