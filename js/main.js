@@ -442,15 +442,19 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     });
 
     $('partyName').textContent = p.party || people.join(' & ');
+    /* The line under the name only says something when there is
+       something to say: a party that has answered before is told so.
+       A first visit gets the roster straight away — the buttons are
+       the instruction. */
+    var sub = $('partySub');
     if(again){
       var on = answeredOn(p.answeredAt);
-      $('partySub').textContent = 'You answered' + (on ? ' on ' + on : ' already') +
+      sub.textContent = 'You answered' + (on ? ' on ' + on : ' already') +
         ', and your answer is kept below. Change whatever has changed and send it again.';
     } else {
-      $('partySub').textContent = people.length === 1
-        ? 'Let us know whether we should keep your seat warm.'
-        : 'Let us know who will be with us on the night.';
+      sub.textContent = '';
     }
+    sub.hidden = !again;
 
     sendLabel = again ? 'Update our response <span class="arw">&#8594;</span>' : sendDefault;
     sendBtn.innerHTML = sendLabel;
