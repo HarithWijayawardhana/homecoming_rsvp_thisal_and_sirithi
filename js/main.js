@@ -392,7 +392,7 @@ var LOOKUP_ENDPOINT = '/api/lookup';
   var WORDS = ['no','One','Two','Three','Four','Five','Six','Seven','Eight'];
   function count(n){ return WORDS[n] || String(n); }
 
-  function personRow(name, i, pre){
+  function personRow(name, i, pre, locked){
     var li = document.createElement('li');
     li.className = 'roster__row';
     if(pre === 'no') li.classList.add('is-no');
@@ -400,6 +400,17 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     var label = document.createElement('span');
     label.className = 'roster__name';
     label.textContent = name;
+
+    /* An invitation is answered once. A party that has answered is
+       shown what it said, as text — not as a control that looks
+       pressable and is not. */
+    if(locked){
+      var ans = document.createElement('span');
+      ans.className = 'roster__ans';
+      ans.textContent = pre === 'yes' ? 'Coming' : 'Can\u2019t come';
+      li.appendChild(label); li.appendChild(ans);
+      return li;
+    }
 
     var seg = document.createElement('div');
     seg.className = 'seg roster__seg';
@@ -450,18 +461,18 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     if(again){
       var on = answeredOn(p.answeredAt);
       sub.textContent = 'You answered' + (on ? ' on ' + on : ' already') +
-        ', and your answer is kept below. Change whatever has changed and send it again.';
+        '. This is the answer we have.';
     } else {
       sub.textContent = '';
     }
     sub.hidden = !again;
 
-    sendLabel = again ? 'Update our response <span class="arw">&#8594;</span>' : sendDefault;
-    sendBtn.innerHTML = sendLabel;
+    sendBtn.hidden = again;
+    $('another').hidden = !again;
 
     var ul = $('roster');
     ul.innerHTML = '';
-    people.forEach(function(name, i){ ul.appendChild(personRow(name, i, pre[i])); });
+    people.forEach(function(name, i){ ul.appendChild(personRow(name, i, pre[i], again)); });
 
     $('err').textContent = '';
     $('sealed').classList.remove('on');
@@ -507,7 +518,12 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify(payload)
     }).then(function(r){
-      if(!r.ok) throw new Error('Request failed: ' + r.status);
+      if(r.ok) return;
+      /* 409 is the one refusal a guest can act on: the invitation has
+         already been answered. Everything else is ours to apologise for. */
+      var e = new Error('Request failed: ' + r.status);
+      e.answered = r.status === 409;
+      throw e;
     });
   }
 
@@ -538,7 +554,6 @@ var LOOKUP_ENDPOINT = '/api/lookup';
 
   var sendBtn = $('send');
   var sendDefault = sendBtn.innerHTML;   // "Confirm our response"
-  var sendLabel = sendDefault;           // showParty swaps it for a repeat answer
 
   sendBtn.addEventListener('click', function(){
     if(!party) return;
@@ -576,13 +591,16 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       .then(function(){ celebrate(coming, staying); })
       .catch(function(e){
         console.error(e);
-        err.textContent = 'That did not send. Check your connection and try once more.';
+        err.textContent = e && e.answered
+          ? 'This invitation has already been answered — search for it again to see the reply we have.'
+          : 'That did not send. Check your connection and try once more.';
       })
       .then(function(){
         sendBtn.disabled = false;
-        sendBtn.innerHTML = sendLabel;
+        sendBtn.innerHTML = sendDefault;
       });
   });
 
   $('again').addEventListener('click', backToLookup);
+  $('another').addEventListener('click', backToLookup);
 })();

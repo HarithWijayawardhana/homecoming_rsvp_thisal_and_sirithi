@@ -16,9 +16,10 @@ import { norm } from './_guests.js';
 
 var LIMIT = { contact: 200, song: 200, notes: 1000, message: 2000, name: 200 };
 
-/* One invitation should not be able to fill the table. Generous enough
-   that a family changing its mind repeatedly is never turned away. */
-var MAX_PER_PARTY = 20;
+/* One answer per invitation, and it is final. The browser already
+   shows an answered party its reply read-only; this is the rule
+   itself, and the only place it is enforced. */
+var MAX_PER_PARTY = 1;
 
 async function readBody(req) {
   if (typeof req.body === 'string') return req.body;
@@ -84,7 +85,7 @@ export default async function handler(req, res) {
 
     var seen = await sql`select count(*)::int as n from responses where party_id = ${partyId}`;
     if (seen[0].n >= MAX_PER_PARTY) {
-      return res.status(429).json({ ok: false, error: 'That invitation has already been answered' });
+      return res.status(409).json({ ok: false, error: 'That invitation has already been answered' });
     }
 
     // written in the order the names appear on the envelope, not the order they arrived

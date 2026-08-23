@@ -752,6 +752,14 @@ input:focus{outline:0; border-bottom-color:var(--gold)}
 .roster__row:first-child{border-top:1px solid rgba(190,136,56,.24)}
 .roster__name{font-family:'Marcellus',serif; font-size:clamp(16px,1.8vw,20px); transition:color .4s ease}
 .roster__row.is-no .roster__name{color:var(--muted)}
+/* The answer of a party that has already replied. Flat tracked text, not
+   a segment: pills are actions and squares are choices, and this is
+   neither — it is the record. */
+.roster__ans{
+  font-family:'Jost',sans-serif; font-size:11px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--crimson);
+}
+.roster__row.is-no .roster__ans{color:var(--muted)}
 .foot-actions{display:flex; flex-wrap:wrap; align-items:center; gap:12px 16px}
 .rsvp-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px; margin-top:clamp(28px,3.4vw,44px)}
 .note{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted)}

@@ -542,23 +542,29 @@ columns are still in the `responses` table and still in the CSV export, and
 absence, and dropping columns is the one change that cannot be undone. Leave
 them unless you are sure.
 
-**A party that has answered finds its answer waiting.** `/api/lookup` returns
-`answers` — the party's most recent response, one `'yes'` / `'no'` / null per
-name, in `people` order — and `showParty()` in `js/main.js` seeds the roster
-from it, changes the line above it, and relabels the button "Update our
-response". Aligned by index on the server so the browser never matches names a
+**An invitation is answered once, and the answer is final.** `/api/lookup`
+returns `answers` — the party's response, one `'yes'` / `'no'` / null per name,
+in `people` order — and `showParty()` in `js/main.js` uses it to decide which
+of two views the guest gets. No answer yet: the roster of Coming / Can't come
+segments and the "Confirm our response" button. Answered: the same names with
+their replies as flat tracked text (`.roster__ans`), the line above saying when
+it was sent, and the send button swapped for the ghost "Answer for another
+invitation". Nothing on that screen is pressable except the way back, which is
+the point — a control that looks like it submits and does not is worse than no
+control. Aligned by index on the server so the browser never matches names a
 second time. The party list is cached for 60s inside the function; the answers
 deliberately are **not**, because a guest who sends a response and searches
-again a moment later has to see what they just sent. Re-answering was always
-allowed — every submission is kept and the export marks the older one
-`superseded` — this just stops the roster reading as though nothing had been
-said.
+again a moment later has to see what they just sent.
 
 `/api/rsvp` trusts nothing the browser says about itself: the party is fetched
 by id, the submitted names must match that party's people exactly, and `seats`
-and `invited` are recounted server-side. One invitation is capped at 20
-submissions. Every submission is kept — a party that answers twice keeps both,
-and the export marks the older one `superseded` rather than hiding it.
+and `invited` are recounted server-side. `MAX_PER_PARTY` is **1** — a second
+submission for the same invitation is refused with **409**, which is the one
+status `sendResponse()` in `js/main.js` reads back and turns into a sentence a
+guest can act on. The read-only view is the courtesy; this is the rule, and it
+is the only place it is enforced. The `superseded` column in the export is a
+window function over each party's responses, so it is now always empty; it
+costs nothing and is what would come back if the rule were ever relaxed.
 
 Env vars, all set in production, preview and development:
 `DATABASE_URL` (injected by the Neon marketplace integration) and `ADMIN_KEY`

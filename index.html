@@ -301,6 +301,11 @@
           <p class="note err" id="err" role="status"></p>
           <div class="foot-actions">
             <button class="btn btn--solid" id="send" type="button">Confirm our response <span class="arw">&#8594;</span></button>
+            <!-- a party that has already answered gets the roster read-only
+                 and this instead of the send button: one answer per
+                 invitation, so there is nothing left to press but the way
+                 back. -->
+            <button class="btn btn--ghost" id="another" type="button" hidden>Answer for another invitation</button>
           </div>
         </div>
       </div>
