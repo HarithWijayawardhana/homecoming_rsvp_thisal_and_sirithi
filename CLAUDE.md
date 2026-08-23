@@ -30,14 +30,13 @@ js/guests.js             the guest list, one entry per envelope — local only,
                          never deployed (see .vercelignore)
 assets/img/painting.webp the artwork with the lamps erased
 assets/img/couple.webp   the wedding portrait, edge feathered into its alpha
-assets/img/bench.webp    the other five story watercolours, same treatment.
-assets/img/first-date.webp   file names say what is *in* each picture, not
-assets/img/graduation.webp   which chapter shows it: chapters 1-4 are bench,
-assets/img/proposal.webp     first-date, graduation, proposal, then chapter 5
-assets/img/homecoming.webp   ("Husband and wife") is homecoming.webp and
-                         chapter 6 ("The homecoming") is couple.webp. bench and
-                         graduation are landscape (.tl__art--wide), the rest
-                         portrait
+assets/img/first-date.webp   the other four story watercolours, same
+assets/img/graduation.webp   treatment. File names say what is *in* each
+assets/img/proposal.webp     picture, not which chapter shows it: chapters 1-3
+assets/img/homecoming.webp   are first-date, graduation, proposal, then chapter
+                         4 ("The wedding") is homecoming.webp and chapter
+                         5 ("The homecoming") is couple.webp. graduation is the
+                         one landscape (.tl__art--wide), the rest portrait
 assets/img/orn-arch.webp    the five floral ornaments, keyed off one sheet:
 assets/img/orn-garland.webp   arch, garland, bloom, spray, corner band
 assets/img/orn-bloom.webp
@@ -56,7 +55,7 @@ vercel.json              cache headers; framework null, no build step
 .vercelignore            what must not reach the internet
 server/apps-script.gs    the old Google Sheets backend, unused, kept as a fallback
 tools/extract_lanterns.py  regenerates the art if the illustration changes
-tools/feather_portrait.mjs bakes the soft edge into all six story images
+tools/feather_portrait.mjs bakes the soft edge into the story images
 tools/extract_ornaments.mjs keys the five ornaments off their sheet
 ```
 
@@ -307,7 +306,7 @@ read from `js/guests.js` in the browser.
   `gsap.globalTimeline.getChildren(false,false,true)` finds the timeline
   without touching the page, and `Emulation.setDeviceMetricsOverride` gives a
   real 360px viewport where `--window-size` is clamped by macOS.
-- **"Our story" is a scroll-drawn timeline, and it is still pure CSS.** Six
+- **"Our story" is a scroll-drawn timeline, and it is still pure CSS.** Five
   chapters (`.tl__ch`) hang off a gold thread that draws itself as the guest
   descends, each with a node that lights as the tip reaches it. Nothing in
   `js/main.js` knows this section exists and it must stay that way: the thread
@@ -396,7 +395,7 @@ read from `js/guests.js` in the browser.
   puts its `border-bottom` under two lines and reads as broken rather than as
   tight. Tracking is what to give up; the sizes are already at the floor.
 
-  All six chapters carry a watercolour now, so no plate is in the markup. The
+  All five chapters carry a watercolour now, so no plate is in the markup. The
   `.tl__plate` rules stay in the stylesheet regardless: they are the documented
   treatment for a chapter with no picture — a small ogee plate carrying a gold
   lozenge, deliberately ornament-sized, because a plate scaled up to fill the
@@ -406,7 +405,7 @@ read from `js/guests.js` in the browser.
   plate, and `aria-hidden` comes off the slot when it does: a plate is
   ornament, a picture is content and carries real `alt`.
 
-  Two of the six are landscape, and `.tl__art--wide` gives them 360px against
+  One of the five is landscape, and `.tl__art--wide` gives it 360px against
   the portraits' 320. In the plain 300px slot a landscape draws 300×200 against
   a portrait's 300×465 — under half the visual mass, and the zig-zag limps. It
   is desktop-only by construction: the `max-width:760px` block sets `.tl__art`
@@ -430,8 +429,8 @@ read from `js/guests.js` in the browser.
   that sharp drops the alpha silently if you join the channel onto a reused
   pipeline — the tool asserts `hasAlpha` on the way out for that reason.
 
-  Its header comment holds **the exact command for each of the six**; keep them
-  there, because the crops and fades were tuned by eye and are not re-derivable.
+  Its header comment holds **the exact command for each picture**, the retired
+  2015 bench included; keep them there, because the crops and fades were tuned by eye and are not re-derivable.
   Two positional args (`SRC`, `OUT`) plus `--width` / `--fade` / `--crop`, whose
   defaults are the wedding portrait's — so the bare two-argument call still
   reproduces `couple.webp` byte for byte, which is worth re-checking if you
@@ -585,7 +584,7 @@ reduced motion honoured, no layout shift on load. Check these on any change.
      which would stop it being a link.
    - The static plan is still `assets/img/map.svg` and `tools/build_map.mjs`
      still draws it, if the frame ever has to come back out.
-   ~~Photographs for the story chapters~~ — done. All six chapters carry a
+   ~~Photographs for the story chapters~~ — done. All five chapters carry a
    feathered watercolour now.
 4. ~~Add Open Graph and Twitter tags~~ — done. They point at `painting.webp`
    on the `.vercel.app` origin; update the absolute URLs if a custom domain

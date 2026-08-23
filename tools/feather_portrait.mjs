@@ -2,8 +2,10 @@
  *
  *   npm i --no-save sharp        # not a project dependency; see CLAUDE.md
  *
- * Every one of the six story images was produced by this tool. The commands,
- * so they stay reproducible:
+ * Every story image was produced by this tool. The commands, so they stay
+ * reproducible — bench.webp among them, which carried the 2015 chapter until
+ * the story was cut to start at 2016; the line stays because the crop and fade
+ * are not re-derivable:
  *
  *   node tools/feather_portrait.mjs new_image/IMG_5677.JPG.jpeg
  *   node tools/feather_portrait.mjs new_image/IMG_5383.PNG assets/img/first-date.webp --width=640
