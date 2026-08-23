@@ -216,10 +216,80 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     }
     document.querySelectorAll('#count .n').forEach(function(el){
       var k = el.dataset.c;
-      el.textContent = k === 'd' ? out.d : pad(out[k]);
+      var next = k === 'd' ? String(out.d) : pad(out[k]);
+      if(el.textContent === next) return;
+      el.textContent = next;
+      /* The digit rises into its slot rather than snapping. The clip is on
+         the .mask wrapper, not on .n — an element cannot clip its own
+         content while it is the thing being translated. Retriggering needs
+         the class gone for a frame, which is what the reflow read buys. */
+      if(reduce) return;
+      el.classList.remove('roll');
+      void el.offsetWidth;
+      el.classList.add('roll');
     });
   }
   counter(); setInterval(counter, 1000);
+
+  /* ---------- nav rail ----------
+     Two jobs, no scroll listener: mark the section being read, and stay out
+     of the way until the hero has been passed. The progress hairline is a
+     scroll-driven animation in the stylesheet. */
+  var nav = document.querySelector('.nav');
+  if(nav){
+    var navLinks = [].slice.call(nav.querySelectorAll('.nav__links a')),
+        hero = document.querySelector('.hero');
+
+    if(hero){
+      /* .is-past goes on when the hero has left, which is also the only
+         moment the rail has anything to sit against. */
+      new IntersectionObserver(function(entries){
+        nav.classList.toggle('is-past', !entries[0].isIntersecting);
+      }, {threshold:0, rootMargin:'-40% 0px 0px 0px'}).observe(hero);
+    }
+
+    var sections = navLinks.map(function(a){
+      return document.querySelector(a.getAttribute('href'));
+    });
+    /* One winner, not a set. A band this narrow can still have two sections
+       in it at a boundary, and two underlined links read as a bug — so the
+       observer only tells us something moved, and the section whose middle
+       is nearest the middle of the screen is the one that gets marked. */
+    function markNearest(){
+      var mid = window.innerHeight / 2, best = -1, bestD = Infinity;
+      sections.forEach(function(s, i){
+        if(!s) return;
+        var r = s.getBoundingClientRect();
+        if(r.bottom < 0 || r.top > window.innerHeight) return;
+        var d = Math.abs((r.top + r.bottom) / 2 - mid);
+        if(d < bestD){ bestD = d; best = i; }
+      });
+      navLinks.forEach(function(a, i){
+        if(i === best) a.setAttribute('aria-current','true');
+        else a.removeAttribute('aria-current');
+      });
+    }
+    var seen = new IntersectionObserver(markNearest, {threshold:[0, .25, .5, .75, 1]});
+    sections.forEach(function(s){ if(s) seen.observe(s); });
+
+  }
+
+  /* Every in-page anchor on the page, not just the rail: the hero's two
+     buttons, the story's last chapter and the footer all point at hashes
+     too. The hrefs are real, for the keyboard and for no-JS. But a hash
+     left in the address bar means the next load of this URL skips the
+     curtain (see the location.hash check above), and a guest who forwards
+     the link should not be handing on a page with no curtain — so scroll,
+     then put the address bar back. */
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if(!a || a.getAttribute('href') === '#') return;
+    var el = document.querySelector(a.getAttribute('href'));
+    if(!el) return;
+    e.preventDefault();
+    el.scrollIntoView({behavior: reduce ? 'auto' : 'smooth', block:'start'});
+    history.replaceState(null, '', location.pathname + location.search);
+  });
 
   /* ---------- rsvp, step one: find the invitation ---------- */
   var $ = function(id){ return document.getElementById(id); };

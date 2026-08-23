@@ -251,12 +251,12 @@ body.curtain-up{overflow:hidden; overscroll-behavior:none}
 
 /* ---- the title card ----
    The only reason a splash screen earns the guest's three seconds:
-   it has to say something before it opens. Monogram and date, in the
+   it has to say something before it opens. Names and date, in the
    page's own faces, lit from behind by the bloom. */
 .curtain__title{
   position:absolute; left:50%; top:47%; z-index:5;
   transform:translate(-50%,-50%);
-  width:min(560px, 84vw);
+  width:min(680px, 88vw);
   display:flex; flex-direction:column; align-items:center;
   text-align:center; pointer-events:none;
   text-shadow:0 2px 22px rgba(30,9,15,.55);
@@ -269,14 +269,25 @@ body.curtain-up{overflow:hidden; overscroll-behavior:none}
   font-size:clamp(9px,1.05vw,11.5px); letter-spacing:.42em;
   text-transform:uppercase; color:var(--cur-gold);
 }
-.curtain__mono{
+/* The names, not initials: the card is the first thing a guest sees and
+   it should not need decoding. Full words take far less tracking than
+   two letters did — .045em, and js/curtain.js tweens down to the same
+   value. Sized so the line holds without wrapping: sixteen letters of
+   Italiana is a much wider object than `T & S` was, which is why the
+   card itself is wider here than the 560px the rest of it wants. */
+.curtain__names{
   margin:clamp(16px,2.4vw,26px) 0 0;
   font-family:'Italiana',serif; font-weight:400;
-  font-size:clamp(56px,12vw,132px); line-height:1;
-  letter-spacing:.14em; text-indent:.14em;   /* balance the trailing track */
-  color:var(--cur-gold-hi);
+  font-size:clamp(34px,5.6vw,62px); line-height:1.02;
+  letter-spacing:.045em; text-indent:.045em;  /* balance the trailing track */
+  color:var(--cur-gold-hi); white-space:nowrap;
 }
-.curtain__mono i{font-style:normal; color:var(--cur-gold); opacity:.86}
+.curtain__names b{font-weight:inherit}
+.curtain__names i{
+  font-style:normal; color:var(--cur-gold); opacity:.86;
+  font-size:.78em; padding:0 .04em;
+}
+
 .curtain__rule{
   display:flex; align-items:center; gap:14px;
   width:min(280px,62%); margin:clamp(16px,2.2vw,24px) 0 0;
@@ -379,8 +390,23 @@ body.curtain-up{overflow:hidden; overscroll-behavior:none}
      It goes below them instead — which means the card has to stop being
      centred on its own box first: centred, every pixel the button is
      pushed down lifts the monogram by half of one, and the two never
-     separate. Pinned, the drop is the margin and nothing else moves. */
-  .curtain__title{top:38%; transform:translate(-50%,0)}
+     separate. Pinned, the drop is the margin and nothing else moves.
+
+     Pinned at 33% rather than the 38% the monogram sat at: the stacked
+     names are three lines where two initials were one, and the card has
+     to give that height back at the top or the button lands on the hem. */
+  .curtain__title{top:33%; transform:translate(-50%,0)}
+  /* Stacked, not shrunk. Sixteen letters on one line at 360px would be
+     26px type carrying the card — a phone has the height to spare and
+     the ampersand centred between the two names is the older setting
+     anyway. */
+  .curtain__names{
+    white-space:normal; font-size:clamp(40px,11.5vw,58px);
+    line-height:1.06; text-indent:0;
+  }
+  .curtain__names b,
+  .curtain__names i{display:block}
+  .curtain__names i{font-size:.62em; padding:.04em 0}
   .curtain__enter{margin-top:clamp(84px,18vh,170px)}
   .curtain__tie{width:clamp(58px,15vw,84px)}
   .curtain__panel--l .curtain__tie{left:7%}

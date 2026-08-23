@@ -19,3 +19,8 @@ README.md
 .agents/
 .claude/
 skills-lock.json
+
+# The preview harness for the static map plan. It is a bare <img> pointed at
+# assets/img/map.svg, for looking at what tools/build_map.mjs drew — the repo
+# root is served as-is, so without this line it would be a public page.
+mapview.html
