@@ -550,11 +550,24 @@ read from `js/guests.js` in the browser.
   `createMediaElementSource` may be called only once per element, which is
   what `routed` protects. `LEVEL` (0.45) is the knob to turn if it is too
   loud — turn it, not the file.
-- **The fetch is started by hand on `window.load`.** `preload="none"` keeps
-  three megabytes from competing with the painting and the fonts, but left at
-  that the gate press is followed by a wait rather than by music, which a
-  guest cannot tell from nothing having happened. The guest has the title
-  card to read, so the buffer is there by the time they press.
+- **The first-gesture listener is on `click`, not `pointerdown`, and that is
+  the difference between working and not on a phone.** A `pointerdown` is not
+  an activation-triggering event on a touch screen — the browser grants
+  activation on `pointerup`/`click` — so the gate press arrived at the handler
+  with `navigator.userActivation.hasBeenActive` still `false`, `play()` was
+  refused, and the guest opened the invitation onto a struck-through note and
+  silence. Verified with a real `Input.dispatchTouchEvent`:
+  `pointerdown false → pointerup true → click true`. `curtain:reveal` is wired
+  up as a second trigger so "the invitation is open" and "the music is
+  playing" cannot come apart; it is the module's documented event, so this is
+  still not a third seam.
+- **The fetch is started by hand on an idle callback (2s timeout).** Not on
+  `window.load`: that waits for the painting and every ornament, so the fetch
+  would race the press instead of finishing before it. `preload="none"` keeps
+  three megabytes off the critical path; this puts them on the wire while the
+  guest is still reading the title card. Without it the press is followed by a
+  wait rather than by music, which a guest cannot tell from nothing having
+  happened.
 - The toggle (`.sound`) is fixed in the corner and appears on `body.ready`
   alone. It cannot ride the nav rail: that only arrives once the hero has
   gone past, and music with no way to silence it until the guest scrolls is

@@ -319,14 +319,19 @@ var LOOKUP_ENDPOINT = '/api/lookup';
         is read-only on iOS but score.muted is not, so muting is the only way
         to open quietly on a phone rather than at whatever level the file was
         mastered at.
-     3. A refused play() puts the first-gesture listener back. One gesture the
-        browser declined to count must not cost the guest the music for the
-        rest of the visit.
-     4. The three megabytes are fetched by hand after window load. The guest
-        still has the title card to read before they press anything, so by
-        then it is buffered — and without it the press is followed by a wait
-        instead of by music, which is indistinguishable from nothing having
-        happened.
+     3. The listener is on click, not pointerdown. A pointerdown is not an
+        activation-triggering event on a touch screen, so on a phone the gate
+        press reached the handler before the page counted as activated and
+        play() was refused. curtain:reveal is wired up as a backstop, so
+        "the invitation is open" and "the music is playing" cannot come
+        apart. A refused play() puts the listener back either way: one
+        gesture the browser declined to count must not cost the guest the
+        music for the rest of the visit.
+     4. The three megabytes are fetched by hand, on an idle callback, while
+        the guest is still reading the title card — not on window load, which
+        on this page waits for the painting and every ornament. Without it
+        the press is followed by a wait rather than by music, which a guest
+        cannot tell apart from nothing having happened.
 
      The level still goes through a gain node rather than score.volume,
      because iOS ignores volume. It is a platform API, not a dependency —
@@ -429,14 +434,16 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       mark();
     }
 
-    /* Playing, but 'playing' is what wires the gain in — and if that event
-       never lands the element would stay muted for good. */
+    /* play() has resolved, so playback has begun and 'playing' — which is
+       what wires the gain in and takes the mute off — should already have
+       landed. If it has not, wire it anyway: a missed event must cost a
+       moment, not the whole track. */
     function settled(){
-      setTimeout(function(){ if(!routed && !score.paused) route(); }, 4000);
+      setTimeout(function(){ if(!routed && !score.paused) route(); }, 600);
     }
 
     /* The browser would not start it. Not an error — a gesture it declined
-       to count. Go back to off and start listening again, so the next touch
+       to count. Go back to off and start listening again, so the next one
        tries rather than leaving the guest a button they have to notice. */
     function refused(){
       wants = false;
@@ -445,19 +452,28 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       listen();
     }
 
+    /* click, NOT pointerdown, and the difference is the whole bug this
+       replaced. A pointerdown is not an activation-triggering event on a
+       touch screen — the browser grants activation on pointerup/click — so
+       on a phone the gate press arrived here *before* the page counted as
+       activated, play() was refused, and the guest opened the invitation
+       onto a struck-through note and silence. click is granted activation
+       everywhere, and a button gives you one for a tap, a mouse press and
+       a keyboard Enter alike. */
     function listen(){
-      document.addEventListener('pointerdown', first, true);
-      document.addEventListener('keydown', first, true);
+      document.addEventListener('click', start, true);
+      document.addEventListener('keydown', start, true);
     }
     function unlisten(){
-      document.removeEventListener('pointerdown', first, true);
-      document.removeEventListener('keydown', first, true);
+      document.removeEventListener('click', start, true);
+      document.removeEventListener('keydown', start, true);
     }
     /* The toggle is excluded, and the exclusion is the whole point: a press
        on it is a first gesture too, and without this the button would turn
        the music on a tenth of a second before its own handler turned it
        off — a guest pressing "Play music" would get silence. */
-    function first(e){
+    function start(e){
+      if(wants) return;
       if(e && e.target && e.target.closest && e.target.closest('.sound')) return;
       unlisten();
       wants = true;
@@ -466,6 +482,14 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     /* Capture, and on the document: the press that matters belongs to the
        curtain's own button, which this file may not touch. */
     listen();
+
+    /* And the backstop, which is also the plainest statement of the rule:
+       when the invitation is open, the music is playing. By the time this
+       fires the guest has pressed the gate, so the activation is in hand —
+       and on the paths where the curtain dismisses itself with nobody
+       having pressed anything, play() is refused and start() simply waits
+       for a real gesture, which is the same graceful fallback as before. */
+    document.addEventListener('curtain:reveal', function(){ start(); });
 
     sound.addEventListener('click', function(){
       unlisten();
@@ -477,13 +501,17 @@ var LOOKUP_ENDPOINT = '/api/lookup';
       if(wants || !score.paused) apply();
     });
 
-    /* Start the fetch once the page itself has finished loading, and only if
-       the guest has not already set it going. */
-    window.addEventListener('load', function(){
-      setTimeout(function(){
-        if(score.paused && !routed){ score.preload = 'auto'; score.load(); }
-      }, 400);
-    });
+    /* Start the fetch while the guest is still reading the title card. Not
+       on window load: that waits for the painting and every ornament, which
+       on this page is seconds, and the fetch would then be racing the press
+       instead of finishing before it. An idle callback gets out of the way
+       of the first paint and the curtain's own opening, and the 2s timeout
+       is the promise that it happens anyway. */
+    function buffer(){
+      if(score.paused && !routed){ score.preload = 'auto'; score.load(); }
+    }
+    if(window.requestIdleCallback) requestIdleCallback(buffer, {timeout: 2000});
+    else setTimeout(buffer, 1200);
 
     mark();
   }
