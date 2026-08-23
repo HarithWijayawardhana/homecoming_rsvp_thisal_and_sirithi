@@ -9,6 +9,9 @@
 # in index.html you must take this line out too, or the lookup will break.
 js/guests.js
 
+# The spreadsheet js/guests.js was transcribed from — same reason.
+new_guest_list/
+
 # Local tooling and notes — no reason for these to be on the internet.
 scripts/
 tools/
