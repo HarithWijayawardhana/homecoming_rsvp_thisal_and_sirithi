@@ -13,6 +13,15 @@ node_modules/
 .claude/
 skills-lock.json
 
+# The real guest list, in both its forms: the spreadsheet as it was handed
+# over, and js/guests.js, the transcription that `npm run db:seed` pushes to
+# Neon. This repo is public, so neither may be committed — only placeholder
+# names were ever in history, and it stays that way. A fresh clone therefore
+# has no guest list; the database is the live one, and the spreadsheet is on
+# the machine this was set up on.
+new_guest_list/
+js/guests.js
+
 # Source photographs waiting to be turned into artwork. The converted webp
 # in assets/img/ is what the page loads; the original stays on this machine,
 # the way tools/ keeps its source material off the deployment.

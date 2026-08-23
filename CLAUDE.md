@@ -524,6 +524,14 @@ wiring them up cost `js/main.js` two variables and nothing else:
 | `POST /api/rsvp` | validates, then one row in `responses` plus one per person in `response_people`. |
 | `GET /api/responses?key=` | CSV of everything, newest first. `ADMIN_KEY`. Never link to it. |
 
+The form asks for nothing but the answers. It used to also collect a contact,
+a song, a dietary note and a message; all four were removed from `index.html`
+and from the payload `js/main.js` builds. The `contact`/`song`/`notes`/`message`
+columns are still in the `responses` table and still in the CSV export, and
+`clip()` in `api/rsvp.js` writes `''` into each — nothing is broken by their
+absence, and dropping columns is the one change that cannot be undone. Leave
+them unless you are sure.
+
 `/api/rsvp` trusts nothing the browser says about itself: the party is fetched
 by id, the submitted names must match that party's people exactly, and `seats`
 and `invited` are recounted server-side. One invitation is capped at 20
@@ -544,11 +552,18 @@ npm run db:check             # what is in there now
 vercel dev                   # the page with api/ working, on :3000
 ```
 
-**The guest list is not deployed.** `js/guests.js` is still the one place it is
-written by hand, but `.vercelignore` keeps it off the internet and `index.html`
-no longer loads it — so edit the file, run `npm run db:seed`, and the lookup
-follows. If you ever put that script tag back you must also drop the line from
-`.vercelignore`, or the lookup breaks.
+**The guest list is neither deployed nor committed.** `js/guests.js` is still
+the one place it is written by hand, but three things keep it local: `.gitignore`
+keeps it out of this repo (which is public on GitHub), `.vercelignore` keeps it
+off the internet, and `index.html` no longer loads it. So edit the file, run
+`npm run db:seed`, and the lookup follows. If you ever put that script tag back
+you must also drop the line from `.vercelignore`, or the lookup breaks.
+
+Because it is untracked, **a fresh clone has no guest list** and `npm run db:seed`
+will fail there. That is deliberate. The live list is the `parties` table in
+Neon; the hand-written copy and the spreadsheet it came from live on the machine
+this was set up on. Only the placeholder names were ever committed — do not put
+the real ones in history to make a clone tidier.
 
 Note that preview and production share one Neon database. Test writes show up in
 the real responses; clear them when you are done.
@@ -562,9 +577,13 @@ reduced motion honoured, no layout shift on load. Check these on any change.
 
 1. ~~Set `RSVP_ENDPOINT`~~ — done. Points at `/api/rsvp`, and a real submission
    was confirmed landing in Postgres and coming back out of the CSV export.
-2. Replace the placeholder guest list in `js/guests.js` with the real one, then
-   run `npm run db:seed`. **Until this is done the site will not find any real
-   guest.** This is the last thing standing between here and sending it out.
+2. ~~Replace the placeholder guest list~~ — done. The real list is in
+   `js/guests.js` and seeded: 10 invitations, 23 people. It was transcribed
+   from `new_guest_list/Thisal_and_sirithi_homecoming_guest_list.xlsx`, one
+   column of names with **a blank row between invitations** — those blanks are
+   the envelopes, and the grouping follows them exactly. Neither the
+   spreadsheet nor `js/guests.js` is in the repo or on the deployment — see
+   "The guest list is neither deployed nor committed" above.
 3. Replace placeholder copy. Respond-by is 10 September 2026.
    ~~The map~~ — done, and it is now a **Google iframe**, not a drawn plate.
    It is the page's one third-party request; everything else, GSAP included,
