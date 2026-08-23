@@ -228,7 +228,7 @@ Search `index.html` for these:
 - **Attire panel** — currently "Formal & traditional / Wear the colour you feel
   best in". Placeholder.
 - **Guest list** — `js/guests.js` still holds the five placeholder parties.
-- **Respond-by date** — "31 August 2026", under the lookup field.
+- **Respond-by date** — "10 September 2026", under the lookup field.
 - **Directions link** — points at a Google Maps search for the venue. Swap in
   the exact map pin.
 - **Countdown target** — in `js/main.js`, `new Date('2026-09-26T19:00:00+05:30')`.
