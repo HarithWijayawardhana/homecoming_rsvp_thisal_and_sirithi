@@ -143,6 +143,15 @@ RGB, plus an edge term for the pale petals the colour term cannot tell from
 the glow behind them. Re-run it only against the original sheet in
 `new_image/`; the crops and the thresholds were tuned by eye.
 
+**Pills are actions, squares are choices.** `.btn` — "Find my invitation",
+"Confirm our response", "Not your party?" — is a full pill (`border-radius:999px`).
+`.seg button` is a 2px rectangle on a `var(--edge)` hairline, and it is the
+page's one segmented control, used twice: the Coming / Can't come pair on
+every roster row, and the `#choices` buttons when a name matches more than one
+invitation. Both shapes are on screen together in each RSVP step, so the
+difference is what tells a guest which one submits. Do not round the segments
+back up, and do not square the buttons.
+
 Rules of thumb: hairline rules over borders, blush space over dividers, one
 accent colour, no gradients except the gold button sweep.
 

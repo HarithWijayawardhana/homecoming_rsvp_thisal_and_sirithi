@@ -405,7 +405,7 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     seg.setAttribute('role','group');
     seg.setAttribute('aria-label', name);
 
-    [['yes','Attending'],['no','Unable']].forEach(function(pair){
+    [['yes','Coming'],['no','Can’t come']].forEach(function(pair){
       var b = document.createElement('button');
       b.type = 'button';
       b.dataset.v = pair[0];
