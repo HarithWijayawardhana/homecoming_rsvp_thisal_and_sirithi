@@ -362,9 +362,8 @@ read from `js/guests.js` in the browser.
   - **`.tl__copy` and `.tl__art` both need an explicit `grid-row`.** Sparse
     auto-placement never moves the cursor backwards, so on an even chapter the
     copy is placed at row 1 column 3 first and the art — asking for column 1 —
-    drops to row 2. Desktop pins both to `grid-row:1`; the ≤760px block must
-    then put the art on `grid-row:2`, or the single column stacks copy and
-    picture in the same cell.
+    drops to row 2. Both are pinned to `grid-row:1` at **every** width; only
+    the column ever changes.
   - **`:nth-of-type(even)` drives the zig-zag, and `.tl__thread` is a `<span>`
     for exactly that reason.** Add any `<div>` as a direct child of `.tl` and
     the whole alternation inverts.
@@ -373,11 +372,29 @@ read from `js/guests.js` in the browser.
     section would sit at `opacity:0` forever with no error anywhere. The
     chapters are the reveal units.
 
-  The pre-reveal offsets on mobile slide **inward** (`translateX(-12px)`). A
-  single column already fills the width to within its own padding, so a
-  positive offset pushes an unrevealed chapter past the viewport and the page
-  scrolls sideways by a few pixels until the observer fires — invisible on a
-  desktop, and a real defect at 360px.
+  **The picture sits beside its copy at every width — the ≤760px block keeps
+  two columns and drops only the zig-zag.** Copy left off the thread, picture
+  right, the same way down the whole section: `minmax(0,1fr) minmax(0,.8fr)`,
+  and `.tl__art` capped at `min(100%,250px)` and set `justify-self:end` so the
+  pictures share the page's right margin instead of ragging against a column
+  that grows with the shell. The *alternation* is what needed two columns of
+  real width, not the pairing; stacking them cost about three extra screens of
+  scrolling on a phone and left the chapter's one idea — a caption and a
+  picture read together — working only on a laptop. At 360px the columns
+  resolve to 171px and 137px. Do not collapse this back to one column.
+
+  The pre-reveal offsets on mobile slide **inward** (`translateX(-12px)`) —
+  both of them, not the desktop's opposing pair. The picture's right edge is
+  the shell's, about 7px from the viewport at 360px, so a positive offset
+  pushes an unrevealed chapter past it and the page scrolls sideways by a few
+  pixels until the observer fires — invisible on a desktop, and a real defect
+  at 360px.
+
+  Under 560px `.tl__label` and `.tl__link` give up tracking (`.22em`, and
+  `.16em`/10px). The copy column is ~171px there, and both are wide enough to
+  wrap in it — the link worse than the label, because a wrapped `.tl__link`
+  puts its `border-bottom` under two lines and reads as broken rather than as
+  tight. Tracking is what to give up; the sizes are already at the floor.
 
   All six chapters carry a watercolour now, so no plate is in the markup. The
   `.tl__plate` rules stay in the stylesheet regardless: they are the documented
@@ -393,8 +410,8 @@ read from `js/guests.js` in the browser.
   the portraits' 320. In the plain 300px slot a landscape draws 300×200 against
   a portrait's 300×465 — under half the visual mass, and the zig-zag limps. It
   is desktop-only by construction: the `max-width:760px` block sets `.tl__art`
-  to `min(100%,300px)` at equal specificity but later in the file, so on one
-  column every picture fills the column. Nothing to keep in sync.
+  to `min(100%,250px)` at equal specificity but later in the file, so below the
+  breakpoint both orientations take the one cap. Nothing to keep in sync.
 
   The last chapter's node is `--crimson`, not gold: it is the story's seal, and
   it ties the end of the timeline to the seal in the RSVP.
