@@ -12,6 +12,15 @@
      so the reveal has a decoded image to fade up and never lands on an
      empty frame. -->
 <link rel="preload" as="image" href="assets/img/painting.webp" fetchpriority="high">
+<!-- Most guests will meet this page as a link in a WhatsApp message, so it
+     has to unfurl with the artwork rather than as a bare URL. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Thisal &amp; Sirithi — Homecoming Reception">
+<meta property="og:description" content="Saturday 26 September 2026, from 7.00 p.m. — The Lumina Ballroom, Cinnamon Life at City of Dreams.">
+<meta property="og:url" content="https://homecoming-rsvp-thisal-and-sirithi.vercel.app/">
+<meta property="og:image" content="https://homecoming-rsvp-thisal-and-sirithi.vercel.app/assets/img/painting.webp">
+<meta property="og:image:alt" content="Watercolour illustration of Thisal and Sirithi beneath a lantern-lit arch.">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="css/styles.css">
 <link rel="stylesheet" href="css/curtain.css">
 </head>
@@ -39,28 +48,50 @@
 <div class="grain" aria-hidden="true"></div>
 <canvas id="petals" aria-hidden="true"></canvas>
 
+<!-- ================= NAV RAIL =================
+     Outside .wrap because it is fixed and full-width. It stays out of the
+     way over the hero and slides in past it — js/main.js adds .is-past —
+     and the hairline across the very top is a scroll-driven animation, so
+     there is no scroll listener anywhere on this page.
+
+     The links carry real hrefs for the keyboard and for no-JS, but the
+     handler scrolls and then strips the hash: js/main.js skips the curtain
+     whenever location.hash is set, and a guest who forwards a link with
+     #story in it should not be handing on a page with no curtain. -->
+<nav class="nav" aria-label="Sections">
+  <span class="nav__bar" aria-hidden="true"></span>
+  <a class="nav__mark" href="#top">T &amp; S</a>
+  <div class="nav__links">
+    <a href="#invitation">The invitation</a>
+    <a href="#story">Our story</a>
+    <a class="nav__rsvp" href="#rsvp">RSVP</a>
+  </div>
+</nav>
+
 <div class="wrap">
 
   <header class="top">
     <span class="monogram">T &amp; S</span>
   </header>
 
-  <!-- ================= HERO ================= -->
+  <!-- ================= HERO =================
+       The formal request used to live here as a 15px paragraph. It is its
+       own section now — on an invitation that sentence is the document —
+       which leaves the hero with the names, the date, the room and the scroll
+       cue: no buttons, the page itself is the way in. Note the consequence: anything moved out of .hero leaves the
+       set js/main.js staggers (`.hero .reveal`) and falls through to the
+       IntersectionObserver instead. -->
   <section class="hero" id="top">
     <div class="hero__copy">
       <p class="eyebrow reveal" data-d="1">Together with their families</p>
       <h1 class="display hero__names reveal" data-d="2">Thisal <span class="amp">&amp;</span> Sirithi</h1>
       <div class="rule reveal" data-d="2"><i></i><b></b><i></i></div>
-      <p class="request reveal" data-d="3">request the honour of your presence at their homecoming reception.</p>
-      <div class="factline reveal" data-d="4">
+      <div class="factline reveal" data-d="3">
         <span class="big">26 September 2026</span>
         <span class="sm">from 7.00 p.m. onwards</span>
       </div>
       <p class="venue reveal" data-d="4">The Lumina Ballroom<span>Cinnamon Life at City of Dreams</span></p>
-      <div class="cta-row reveal" data-d="5">
-        <a class="btn btn--solid" href="#rsvp">Find my invitation <span class="arw">&#8594;</span></a>
-        <a class="btn btn--ghost" href="#evening">See the evening</a>
-      </div>
+      <div class="cue reveal" data-d="5" aria-hidden="true"><span>Scroll</span><i></i></div>
     </div>
 
     <div class="hero__art">
@@ -90,55 +121,167 @@
     </div>
   </section>
 
-  <!-- ================= THE EVENING ================= -->
-  <section id="evening">
-    <div class="sechead">
-      <p class="eyebrow eyebrow--gold reveal">26 . 09 . 2026</p>
-      <h2 class="display reveal" data-d="1">The evening</h2>
-      <p class="reveal" data-d="2">One night, three things worth writing down.</p>
-    </div>
-
-    <div class="arches">
-      <div class="arch reveal" data-d="1">
-        <svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true"><path d="M8 258 L8 130 C8 78 52 78 74 46 C86 28 94 16 100 6 C106 16 114 28 126 46 C148 78 192 78 192 130 L192 258 Z"/></svg>
-        <div class="arch__in">
-          <p class="eyebrow">When</p>
-          <p class="big">Saturday<br>26 September</p>
-          <p class="txt">2026<br>From 7.00 p.m. onwards</p>
-        </div>
-      </div>
-
-      <div class="arch reveal" data-d="2">
-        <svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true"><path d="M8 258 L8 130 C8 78 52 78 74 46 C86 28 94 16 100 6 C106 16 114 28 126 46 C148 78 192 78 192 130 L192 258 Z"/></svg>
-        <div class="arch__in">
-          <p class="eyebrow">Where</p>
-          <p class="big">The Lumina<br>Ballroom</p>
-          <p class="txt">Cinnamon Life<br>at City of Dreams</p>
-          <a class="map" href="https://www.google.com/maps/search/?api=1&amp;query=Cinnamon+Life+City+of+Dreams" target="_blank" rel="noopener">Get directions</a>
-        </div>
-      </div>
-
-      <div class="arch reveal" data-d="3">
-        <svg viewBox="0 0 200 260" preserveAspectRatio="none" aria-hidden="true"><path d="M8 258 L8 130 C8 78 52 78 74 46 C86 28 94 16 100 6 C106 16 114 28 126 46 C148 78 192 78 192 130 L192 258 Z"/></svg>
-        <div class="arch__in">
-          <p class="eyebrow">Attire</p>
-          <p class="big">Formal &amp;<br>traditional</p>
-          <p class="txt">Wear the colour<br>you feel best in.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="count reveal" data-d="2" id="count">
-      <div><div class="n" data-c="d">—</div><div class="l">Days</div></div>
-      <div><div class="n" data-c="h">—</div><div class="l">Hours</div></div>
-      <div><div class="n" data-c="m">—</div><div class="l">Minutes</div></div>
-      <div><div class="n" data-c="s">—</div><div class="l">Seconds</div></div>
+  <!-- ================= THE INVITATION =================
+       The first change of ground: a porcelain band breaking out of the
+       shell. It opens on the painted ogee rather than on the drawn .crest
+       that used to sit here: same motif, and the one ornament on the sheet
+       that already carries the arch. Two ogees stacked would be one too
+       many, so the crest came out. -->
+  <section id="invitation" class="bleed ground--pale">
+    <div class="invite column reveal">
+      <img class="orn orn--arch" src="assets/img/orn-arch.webp" alt="" aria-hidden="true" width="1040" height="123" loading="lazy" decoding="async">
+      <p class="eyebrow eyebrow--gold">Together with their families</p>
+      <p class="invite__names">Thisal <span class="amp">&amp;</span> Sirithi</p>
+      <p class="invite__line">request the honour of your presence at their homecoming reception</p>
+      <div class="rule"><i></i><b></b><i></i></div>
+      <p class="invite__when">Saturday the twenty-sixth of September<br>two thousand and twenty-six, at seven in the evening</p>
+      <p class="invite__where">The Lumina Ballroom<br>Cinnamon Life at City of Dreams</p>
+      <p class="invite__close">It would not be a celebration without you in the room.</p>
+      <p class="invite__sign">Thisal <span class="amp">&amp;</span> Sirithi</p>
     </div>
   </section>
 
-  <!-- ================= RSVP ================= -->
-  <section id="rsvp">
+  <!-- ================= OUR STORY =================
+       Ten years as a drawn thread rather than five paragraphs. Entirely
+       CSS: the thread and the nodes run on view() timelines and the
+       chapters ride the page's own .reveal observer, so nothing in
+       js/main.js knows this section is here — and it must stay that way.
+
+       The picture slot takes an ogee plate carrying the year wherever
+       there is no photograph yet. That is the finished look, not a
+       placeholder; a photo simply replaces the plate. -->
+  <section id="story">
     <div class="sechead">
+      <img class="orn orn--garland reveal" src="assets/img/orn-garland.webp" alt="" aria-hidden="true" width="1240" height="129" loading="lazy" decoding="async">
+      <p class="eyebrow eyebrow--gold reveal">How it all began</p>
+      <h2 class="display reveal" data-d="1">Our story</h2>
+      <p class="reveal" data-d="2">Ten years, and the short version.</p>
+    </div>
+
+    <div class="tl">
+      <span class="tl__thread" aria-hidden="true"></span>
+
+      <div class="tl__ch reveal">
+        <span class="tl__node" aria-hidden="true"></span>
+        <div class="tl__copy">
+          <p class="tl__year">2015</p>
+          <p class="tl__label">The bench</p>
+          <p class="tl__text">We first met in June 2015, sitting on the same bench for an exam. Neither of us thought anything of it.</p>
+        </div>
+        <div class="tl__art tl__art--wide">
+          <img src="assets/img/bench.webp" width="640" height="426"
+               loading="lazy" decoding="async"
+               alt="Watercolour of Sirithi and Thisal as students &mdash; she in a white school uniform with a red ribbon in her plaited hair, he in a dark blue shirt &mdash; sitting side by side at a wooden desk, each writing an exam paper.">
+        </div>
+      </div>
+
+      <div class="tl__ch reveal">
+        <span class="tl__node" aria-hidden="true"></span>
+        <div class="tl__copy">
+          <p class="tl__year">2016</p>
+          <p class="tl__label">The second time</p>
+          <p class="tl__text">We met again in March 2016, and somehow that second meeting changed everything. By the end of the month we had our first date.</p>
+        </div>
+        <div class="tl__art tl__art--portrait">
+          <img src="assets/img/first-date.webp" width="640" height="853"
+               loading="lazy" decoding="async"
+               alt="Watercolour of Sirithi and Thisal in their late teens, her head resting against his shoulder &mdash; she in a red t-shirt, he in white &mdash; both smiling.">
+        </div>
+      </div>
+
+      <div class="tl__ch reveal">
+        <span class="tl__node" aria-hidden="true"></span>
+        <div class="tl__copy">
+          <p class="tl__year">2016&ndash;25</p>
+          <p class="tl__label">Everything in between</p>
+          <p class="tl__text">A/Ls, university, graduations, dreams. We laughed, cried, fought, made up, celebrated, struggled and grew together.</p>
+        </div>
+        <div class="tl__art tl__art--wide">
+          <img src="assets/img/graduation.webp" width="640" height="452"
+               loading="lazy" decoding="async"
+               alt="Watercolour of Thisal and Sirithi on graduation day in black mortarboards and orange-trimmed SLIIT gowns, Sirithi holding a wrapped bouquet of red flowers.">
+        </div>
+      </div>
+
+      <div class="tl__ch reveal">
+        <span class="tl__node" aria-hidden="true"></span>
+        <div class="tl__copy">
+          <p class="tl__year">2026</p>
+          <p class="tl__label">The question</p>
+          <p class="tl__text">Ten years brought us countless memories, and in June 2026 a surprise proposal made it official.</p>
+        </div>
+        <div class="tl__art tl__art--portrait">
+          <img src="assets/img/proposal.webp" width="640" height="773"
+               loading="lazy" decoding="async"
+               alt="Watercolour of Thisal down on one knee holding out a ring to Sirithi, who stands smiling in a red blouse behind a table of flowers and a birthday cake, under a &ldquo;Happy Birthday&rdquo; banner.">
+        </div>
+      </div>
+
+      <div class="tl__ch reveal">
+        <span class="tl__node" aria-hidden="true"></span>
+        <div class="tl__copy">
+          <p class="tl__year">2026</p>
+          <p class="tl__label">Husband and wife</p>
+          <p class="tl__text">We got married &mdash; on a morning that went by far too quickly.</p>
+        </div>
+        <div class="tl__art tl__art--portrait">
+          <img src="assets/img/homecoming.webp" width="640" height="853"
+               loading="lazy" decoding="async"
+               alt="Watercolour of Thisal and Sirithi dressed for the evening &mdash; Sirithi in a long red off-the-shoulder gown, Thisal in a navy suit and tie &mdash; standing arm in arm.">
+        </div>
+      </div>
+
+      <div class="tl__ch reveal">
+        <span class="tl__node" aria-hidden="true"></span>
+        <div class="tl__copy">
+          <p class="tl__year">26 . 09</p>
+          <p class="tl__label">The homecoming</p>
+          <p class="tl__text">And now the part we have been looking forward to: celebrating it with you.</p>
+          <a class="tl__link" href="#rsvp">Find my invitation</a>
+        </div>
+        <div class="tl__art tl__art--portrait">
+          <img src="assets/img/couple.webp" width="960" height="1487"
+               loading="lazy" decoding="async"
+               alt="Watercolour portrait of Thisal and Sirithi on their wedding day &mdash; Sirithi in a red and gold lehenga with a veil, holding a bouquet of red and white roses, beside Thisal in a black embroidered sherwani.">
+        </div>
+      </div>
+    </div>
+
+    <div class="story__foot">
+      <img class="orn orn--bloom reveal" src="assets/img/orn-bloom.webp" alt="" aria-hidden="true" width="840" height="85" loading="lazy" decoding="async">
+      <p class="story__close reveal" data-d="1">From two people on a bench to husband and wife &mdash; this is our story.</p>
+      <p class="story__sign reveal" data-d="2">Thisal <span class="amp">&amp;</span> Sirithi</p>
+    </div>
+  </section>
+
+  <!-- ================= COUNTDOWN =================
+       The one dark band on the page, and the only place after the hero
+       where the lantern light comes back — the glows behind the numerals
+       reuse the same flicker keyframes the lamps in the painting run on. -->
+  <section id="countdown" class="bleed ground--velvet cd">
+    <div class="cd__lamps" aria-hidden="true">
+      <i style="--x:16%; --y:24%; --gd:0s"></i>
+      <i style="--x:82%; --y:32%; --gd:.9s"></i>
+      <i style="--x:38%; --y:78%; --gd:1.7s"></i>
+      <i style="--x:66%; --y:70%; --gd:2.4s"></i>
+    </div>
+    <p class="eyebrow cd__eyebrow reveal">Until the doors open</p>
+    <h2 class="reveal" data-d="1">The lanterns are already lit</h2>
+
+    <div class="count reveal" data-d="2" id="count">
+        <div class="cell"><div class="mask"><div class="n" data-c="d">&mdash;</div></div><div class="l">Days</div></div>
+        <div class="cell"><div class="mask"><div class="n" data-c="h">&mdash;</div></div><div class="l">Hours</div></div>
+        <div class="cell"><div class="mask"><div class="n" data-c="m">&mdash;</div></div><div class="l">Minutes</div></div>
+        <div class="cell"><div class="mask"><div class="n" data-c="s">&mdash;</div></div><div class="l">Seconds</div></div>
+    </div>
+
+    <p class="note cd__by reveal" data-d="3">Kindly reply by 31 August 2026</p>
+  </section>
+
+  <!-- ================= RSVP ================= -->
+  <section id="rsvp" class="bleed ground--pale">
+    <div class="sechead">
+      <img class="orn orn--spray reveal" src="assets/img/orn-spray.webp" alt="" aria-hidden="true" width="1120" height="142" loading="lazy" decoding="async">
       <p class="eyebrow eyebrow--gold reveal">One more thing</p>
       <h2 class="display reveal" data-d="1">Will you be there?</h2>
       <p class="reveal" data-d="2">Enter the name on your envelope and we will find your party.</p>
@@ -152,7 +295,7 @@
           <input id="qname" type="text" placeholder="Name on your envelope"
                  autocomplete="name" autocapitalize="words" enterkeyhint="search">
         </div>
-        <button class="btn btn--ink" id="find" type="submit">Find my invitation</button>
+        <button class="btn btn--solid" id="find" type="submit">Find my invitation</button>
       </div>
 
       <p class="err lookup__err" id="lookerr" role="status" aria-live="polite"></p>
@@ -210,10 +353,48 @@
     </div>
   </section>
 
+  <!-- ================= THE PLACE =================
+       The map is a Google embed. It is the one third-party request the page
+       makes — everything else, GSAP included, is vendored — and it was a
+       deliberate trade: a guest wants to pan, zoom and get directions, and a
+       drawn plate cannot do any of that. -->
+  <section id="place">
+    <div class="sechead">
+      <p class="eyebrow eyebrow--gold reveal">Colombo</p>
+      <h2 class="display reveal" data-d="1">The place</h2>
+    </div>
+
+    <div class="place column">
+      <p class="place__where reveal">Cinnamon Life at City of Dreams</p>
+      <p class="place__room reveal" data-d="1">The Lumina Ballroom</p>
+      <p class="place__note reveal" data-d="2">Doors open at seven. Parking is on site, and the ballroom is signposted from the main lobby.</p>
+      <!-- A live Google embed rather than the drawn plate: the guest can pan,
+           zoom and hand it to a driver. It is the page's one third-party
+           frame, so it is lazy and it is boxed to a fixed aspect-ratio — an
+           iframe has no intrinsic size, and without the box the section jumps
+           when the map arrives. The static plan it replaced is still
+           assets/img/map.svg and tools/build_map.mjs still draws it, if the
+           frame ever has to come back out. -->
+      <figure class="map reveal" data-d="3">
+        <div class="map__plate">
+          <iframe class="map__frame" title="Map of Cinnamon Life at City of Dreams, Colombo"
+                  src="https://www.google.com/maps?q=Cinnamon+Life+at+City+of+Dreams,+Colombo&amp;z=16&amp;output=embed"
+                  loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        </div>
+        <figcaption class="map__cap">
+          <span>1 Justice Akbar Mawatha &middot; Colombo 00200</span>
+          <a class="map__open" href="https://maps.app.goo.gl/X251CCmo1q8Uo9bb9" target="_blank"
+             rel="noopener">Open in Maps</a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <footer>
-    <div class="rule reveal" style="margin-inline:auto"><i></i><b></b><i></i></div>
+    <img class="orn orn--foot reveal" src="assets/img/orn-foot.webp" alt="" aria-hidden="true" width="1200" height="290" loading="lazy" decoding="async">
     <p class="foot-names reveal" data-d="1" style="margin-top:34px">Thisal <span class="amp">&amp;</span> Sirithi</p>
     <p class="foot-note reveal" data-d="2">The Lumina Ballroom &middot; 26 September 2026 &middot; 7.00 p.m.</p>
+    <a class="linkline foot-top reveal" data-d="3" href="#top">Back to the top</a>
   </footer>
 
 </div>

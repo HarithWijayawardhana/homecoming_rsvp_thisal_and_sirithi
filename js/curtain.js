@@ -377,7 +377,7 @@ function markup(){
 
   <div class="curtain__title">
     <p class="curtain__eyebrow">Homecoming Reception</p>
-    <p class="curtain__mono">T <i>&amp;</i> S</p>
+    <p class="curtain__names"><b>Thisal</b> <i>&amp;</i> <b>Sirithi</b></p>
     <span class="curtain__rule"><i></i><b></b><i></i></span>
     <p class="curtain__date">26 September 2026</p>
     <button class="curtain__enter" type="button">Open the invitation</button>
@@ -575,7 +575,7 @@ export function initCurtain(options = {}){
 
   /* Built paused, and only Act 1 plays on its own. The title card is the
      only reason a splash screen is worth a guest's time, and Italiana
-     arrives over the network — animate the monogram before the face
+     arrives over the network — animate the names before the face
      lands and it plays in
      a fallback serif, or, during the block period, in nothing at all.
      Waiting costs nothing: the velvet is already painted. The cap is
@@ -614,9 +614,9 @@ export function initCurtain(options = {}){
   tl.fromTo(q('.curtain__eyebrow'),
         {opacity: 0, letterSpacing: '0.78em'},
         {opacity: .82, letterSpacing: '0.42em', duration: 1.1, ease: 'power2.out'}, 'title+=0.1')
-    .fromTo(q('.curtain__mono'),
-        {opacity: 0, y: 14, letterSpacing: '0.30em'},
-        {opacity: 1, y: 0, letterSpacing: '0.14em', duration: 1.2, ease: 'power3.out'}, 'title+=0.22')
+    .fromTo(q('.curtain__names'),
+        {opacity: 0, y: 14, letterSpacing: '0.20em'},
+        {opacity: 1, y: 0, letterSpacing: '0.045em', duration: 1.2, ease: 'power3.out'}, 'title+=0.22')
     .fromTo(q('.curtain__rule'),
         {scaleX: 0, opacity: 0},
         {scaleX: 1, opacity: 1, duration: 0.9, ease: 'power2.out'}, 'title+=0.5')
@@ -642,7 +642,7 @@ export function initCurtain(options = {}){
      title card has opened it, so the run-out sails straight through.
 
      Focus moves to the button as the card lands, so the keyboard path is
-     Tab-free: the monogram arrives, Enter or Space opens it. */
+     Tab-free: the names arrive, Enter or Space opens it. */
   tl.add(() => {
     cue(btn);
     if(!opened) tl.pause();

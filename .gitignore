@@ -13,6 +13,11 @@ node_modules/
 .claude/
 skills-lock.json
 
+# Source photographs waiting to be turned into artwork. The converted webp
+# in assets/img/ is what the page loads; the original stays on this machine,
+# the way tools/ keeps its source material off the deployment.
+new_image/
+
 # Duplicates the file sync leaves behind ("css 2/", ".gitignore 2"). They are
 # always copies of something already here; never commit one.
 * [0-9]
