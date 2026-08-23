@@ -75,7 +75,8 @@ Palette (defined in `:root`, use the variables, never raw hex in rules):
 
 Type: **Italiana** for display (names, section headings, numerals),
 **Marcellus** for serif body, **Jost** for uppercase tracked labels.
-Loaded from Google Fonts in `index.html`.
+Loaded from Google Fonts in `index.html`. The one numeral Italiana does *not*
+set is the countdown — see below; every other figure on the page is still its.
 
 The curtain has its own palette in `css/curtain.css` (`--cur-*`): a deeper
 blush for the velvet, against the same gold, plus `--cur-lining` for the pale
@@ -361,9 +362,8 @@ read from `js/guests.js` in the browser.
   - **`.tl__copy` and `.tl__art` both need an explicit `grid-row`.** Sparse
     auto-placement never moves the cursor backwards, so on an even chapter the
     copy is placed at row 1 column 3 first and the art — asking for column 1 —
-    drops to row 2. Desktop pins both to `grid-row:1`; the ≤760px block must
-    then put the art on `grid-row:2`, or the single column stacks copy and
-    picture in the same cell.
+    drops to row 2. Both are pinned to `grid-row:1` at **every** width; only
+    the column ever changes.
   - **`:nth-of-type(even)` drives the zig-zag, and `.tl__thread` is a `<span>`
     for exactly that reason.** Add any `<div>` as a direct child of `.tl` and
     the whole alternation inverts.
@@ -372,11 +372,29 @@ read from `js/guests.js` in the browser.
     section would sit at `opacity:0` forever with no error anywhere. The
     chapters are the reveal units.
 
-  The pre-reveal offsets on mobile slide **inward** (`translateX(-12px)`). A
-  single column already fills the width to within its own padding, so a
-  positive offset pushes an unrevealed chapter past the viewport and the page
-  scrolls sideways by a few pixels until the observer fires — invisible on a
-  desktop, and a real defect at 360px.
+  **The picture sits beside its copy at every width — the ≤760px block keeps
+  two columns and drops only the zig-zag.** Copy left off the thread, picture
+  right, the same way down the whole section: `minmax(0,1fr) minmax(0,.8fr)`,
+  and `.tl__art` capped at `min(100%,250px)` and set `justify-self:end` so the
+  pictures share the page's right margin instead of ragging against a column
+  that grows with the shell. The *alternation* is what needed two columns of
+  real width, not the pairing; stacking them cost about three extra screens of
+  scrolling on a phone and left the chapter's one idea — a caption and a
+  picture read together — working only on a laptop. At 360px the columns
+  resolve to 171px and 137px. Do not collapse this back to one column.
+
+  The pre-reveal offsets on mobile slide **inward** (`translateX(-12px)`) —
+  both of them, not the desktop's opposing pair. The picture's right edge is
+  the shell's, about 7px from the viewport at 360px, so a positive offset
+  pushes an unrevealed chapter past it and the page scrolls sideways by a few
+  pixels until the observer fires — invisible on a desktop, and a real defect
+  at 360px.
+
+  Under 560px `.tl__label` and `.tl__link` give up tracking (`.22em`, and
+  `.16em`/10px). The copy column is ~171px there, and both are wide enough to
+  wrap in it — the link worse than the label, because a wrapped `.tl__link`
+  puts its `border-bottom` under two lines and reads as broken rather than as
+  tight. Tracking is what to give up; the sizes are already at the floor.
 
   All six chapters carry a watercolour now, so no plate is in the markup. The
   `.tl__plate` rules stay in the stylesheet regardless: they are the documented
@@ -392,8 +410,8 @@ read from `js/guests.js` in the browser.
   the portraits' 320. In the plain 300px slot a landscape draws 300×200 against
   a portrait's 300×465 — under half the visual mass, and the zig-zag limps. It
   is desktop-only by construction: the `max-width:760px` block sets `.tl__art`
-  to `min(100%,300px)` at equal specificity but later in the file, so on one
-  column every picture fills the column. Nothing to keep in sync.
+  to `min(100%,250px)` at equal specificity but later in the file, so below the
+  breakpoint both orientations take the one cap. Nothing to keep in sync.
 
   The last chapter's node is `--crimson`, not gold: it is the story's seal, and
   it ties the end of the timeline to the seal in the RSVP.
@@ -439,6 +457,14 @@ read from `js/guests.js` in the browser.
   too: `height:1.06em` resolves against the element's own font-size, so a mask
   at the inherited 16px clipped a 60px numeral to a sliver. `#count` must stay
   an ancestor of `.n[data-c]` and the keys stay exactly `d`/`h`/`m`/`s`.
+  **These numerals are Marcellus, not Italiana** — the display face's 4 closes
+  up and its 7 trails a swash, and this is the one set of figures on the page
+  that has to be read rather than admired. The `min-width:1.7em` on the mask
+  goes with it: none of the three faces has tabular figures, so the Days cell
+  was resizing from 71px to 40px as its digits changed and shoving its
+  neighbours sideways once a second. It is an em so it holds at every step of
+  the clamp, and it is a floor, not a width — a third digit still grows past
+  it.
 - **The nav rail costs the page no scroll listener.** Its progress hairline is
   `animation-timeline: scroll(root)`; it appears on `body.ready` (which
   `revealHero()` already set and which had no rule until now) plus an `.is-past`
@@ -461,6 +487,16 @@ read from `js/guests.js` in the browser.
   and the two hero CTAs were a second way of saying what the nav rail and the
   scroll cue already say. The lookup's submit button is `btn--solid` now, so
   the gold sweep is the page's one call to action; `btn--ink` is gone with it.
+  The date and the room have left it too: `.factline` and `.venue` live in
+  `#invitation` now, said once, in the document that exists to say them, and
+  the hero is the painting, the names and the scroll cue. Two consequences.
+  `.factline` was built as a wrapping row for the hero's left-aligned column,
+  so `.invite .factline` has to stack it — in a centred column an unstacked
+  row puts the date and the hour shoulder to shoulder on one baseline and the
+  lockup stops reading as one. And moving anything out of `.hero` shrinks the
+  set `js/main.js` staggers, so the `data-d` on what is left has to be
+  renumbered to stay contiguous: that ladder is the path reduced motion and a
+  missing GSAP both take.
 - RSVP is two steps: `#lookupview` (name on the envelope) then `#partyshell`
   (one Attending/Unable pair per person). `lookupParty()` is the only seam
   between the flow and the guest list — swap the source there, nothing else

@@ -237,6 +237,13 @@ body.ready .nav.is-past{opacity:1; transform:none; pointer-events:auto}
 .hero__names .amp{
   color:var(--gold); font-size:.78em; padding:0 .06em; position:relative; top:-.02em;
 }
+/* The request. This is the only place on the page it is set — it was in
+   #invitation too, and on a phone the two landed within one scroll of each
+   other and read as a duplication rather than a refrain. */
+.hero__line{
+  font-family:'Marcellus',serif; font-size:clamp(15px,1.5vw,19px);
+  line-height:1.7; color:var(--ink-2); max-width:32ch;
+}
 .factline{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 16px}
 .factline .big{font-family:'Italiana',serif; font-size:clamp(26px,3.2vw,42px); letter-spacing:.03em}
 .factline .sm{font-size:12px; letter-spacing:.26em; text-transform:uppercase; color:var(--muted)}
@@ -378,30 +385,14 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
 .sechead p{font-family:'Marcellus',serif; color:var(--ink-2); max-width:46ch; font-size:clamp(14px,1.4vw,17px)}
 
 /* ---------- the invitation ----------
-   The sentence the whole page exists to say, finally set at the size it
-   deserves and framed by the ogee rather than boxed in a card. */
+   The date, the hour and the room, framed by the ogee rather than boxed in a
+   card. The eyebrow, the names and the request are the hero's, said once. */
 .invite{max-width:min(760px,100%); margin-inline:auto}
-.invite__names{
-  font-family:'Italiana',serif; font-size:clamp(38px,6.4vw,88px);
-  line-height:1; letter-spacing:.02em; color:var(--ink);
-}
-.invite__names .amp{color:var(--gold); font-size:.7em; padding-inline:.08em}
-.invite__line{
-  font-family:'Marcellus',serif; font-size:clamp(15px,1.7vw,21px);
-  line-height:1.7; color:var(--ink-2); max-width:34ch;
-}
-.invite__when{
-  font-family:'Italiana',serif; font-size:clamp(19px,2.4vw,32px);
-  line-height:1.4; letter-spacing:.03em; color:var(--ink);
-}
-.invite__where{
-  font-family:'Jost',sans-serif; font-size:clamp(10px,1.1vw,12px);
-  letter-spacing:.3em; text-transform:uppercase; color:var(--muted); line-height:2.1;
-}
-.invite__close{
-  font-family:'Marcellus',serif; font-style:italic;
-  font-size:clamp(14px,1.5vw,17.5px); color:var(--ink-2); max-width:38ch;
-}
+/* The date and the room live in the invitation now, not the hero. .factline
+   was built as a wrapping row for the hero's left-aligned column; in a
+   centred column it has to stack, or the date and the hour sit shoulder to
+   shoulder on one baseline and stop reading as a lockup. */
+.invite .factline{flex-direction:column; align-items:center; gap:10px}
 .invite__sign{
   font-family:'Italiana',serif; font-size:clamp(22px,2.8vw,36px);
   letter-spacing:.03em; color:var(--ink);
@@ -675,9 +666,18 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
    the element's OWN font-size, so a mask at the inherited 16px clipped a
    60px numeral to a sliver. Sizing the mask and letting .n inherit keeps
    the clip exactly one line tall at every width. */
+/* Marcellus, not Italiana, for the one set of numerals on the page that has
+   to be read at a glance rather than admired: Italiana's 4 closes up and its
+   7 trails a swash, which at 60px on velvet turns "47" into a guess. The
+   display face still owns every other numeral (the date, the story years).
+   min-width is what keeps the row still: no face here has tabular figures,
+   so the Days cell was resizing from 71px to 40px as the digits changed and
+   dragging its neighbours sideways every second. 1.7em clears the widest
+   two-digit pair with room to spare, and being an em it holds at every step
+   of the clamp; three digits would simply grow past it. */
 .count .mask{
-  overflow:hidden; display:block;
-  font-family:'Italiana',serif; font-size:clamp(32px,4.6vw,60px);
+  overflow:hidden; display:block; min-width:1.7em;
+  font-family:'Marcellus',serif; font-size:clamp(32px,4.6vw,60px);
   line-height:1.06; height:1.06em;
 }
 .count .n{
@@ -807,31 +807,42 @@ footer{padding:var(--sp) 0 70px; text-align:center}
   .artwrap{width:min(84%, 46svh)}
   .hero__copy{max-width:none; align-items:center; text-align:center}
   .rule{margin-inline:auto}
-  .factline{justify-content:center}
+  .hero__line{margin-inline:auto}
   .grid{grid-template-columns:1fr}
 }
 
 /* The timeline's own breakpoint. Below this the centre thread moves to a
-   left rail and every chapter reads in one direction — a zig-zag needs two
-   columns of real width, and there is not room for two of anything here. */
+   left rail and every chapter reads in one direction — the *alternation* is
+   what needs two columns of real width, not the pairing. So the picture stays
+   beside its words at every width and only the zig-zag goes: copy left off
+   the thread, picture right, the same way down the whole section. Stacking
+   them instead cost about three extra screens of scrolling on a phone and
+   left the chapter's one idea — a caption and a picture read together —
+   working only on a laptop. Do not collapse this back to one column. */
 @media (max-width:760px){
   .tl{--rail:6px; --node:9px}
   .tl__ch{
-    grid-template-columns:1fr;
-    gap:clamp(14px,3vw,22px);
+    grid-template-columns:minmax(0,1fr) minmax(0,.8fr);
+    /* the gap is doing horizontal work here, not vertical */
+    gap:clamp(12px,3.2vw,26px);
     padding-left:clamp(26px,7vw,44px);
     padding-block:clamp(22px,5vw,34px);
   }
-  /* One column, so the two must be stacked in explicit rows. Desktop pins
-     both to grid-row 1 to defeat sparse auto-placement; carry that over
-     unchanged here and copy and picture land in the same cell, on top of
-     each other. */
+  /* Both stay on grid-row 1, exactly as on desktop — only the column stops
+     alternating. Nothing here has to defeat sparse auto-placement a second
+     time. */
   .tl__copy,.tl__ch:nth-of-type(even) .tl__copy{
     grid-row:1; grid-column:1; text-align:left; align-items:flex-start;
   }
+  /* One cap for both orientations — which is what makes .tl__art--wide
+     desktop-only: same specificity as the rule above it, later in the file.
+     250 rather than 100%: at 360px the column is 137 and the cap never bites,
+     but by 760 the column is 290 and a portrait drew 290x387 beside three
+     lines of copy, which is a lot of blush for one chapter. Aligned to the
+     column's end so the pictures share the page's own right margin all the
+     way down instead of ragging against a column that grows with the shell. */
   .tl__art,.tl__ch:nth-of-type(even) .tl__art{
-    grid-row:2; grid-column:1; justify-self:start; width:min(100%,300px);
-    margin-top:clamp(14px,3vw,22px);
+    grid-row:1; grid-column:2; justify-self:end; width:min(100%,250px); margin-top:0;
   }
   .tl__plate{margin-inline:0}
   /* the chapter gains padding-top here, so the node has to clear both that
@@ -839,12 +850,13 @@ footer{padding:var(--sp) 0 70px; text-align:center}
   .tl__node{top:calc(clamp(22px,5vw,34px) + var(--tl-node-y))}
   .tl__ch:first-of-type .tl__node{top:var(--tl-node-y)}
   .tl__text{max-width:36ch}
-  /* One direction, and *inward*. A single column already fills the width to
-     within its own padding, so a positive offset on an unrevealed chapter
-     pushes it past the viewport and the page scrolls sideways by those few
-     pixels until the observer fires — which is exactly the kind of defect
-     nobody sees on a desktop. Sliding in from the thread side stays inside
-     the 26px rail padding and reads better anyway. */
+  /* One direction, and *inward* — not the desktop's opposing pair, even now
+     that there are two columns. The picture's right edge is the shell's, so
+     it sits about 7px from the viewport at 360px: a positive offset on an
+     unrevealed chapter pushes it past the edge and the page scrolls sideways
+     by those few pixels until the observer fires — exactly the kind of defect
+     nobody sees on a desktop. Sliding both in from the thread side stays
+     inside the 26px rail padding and reads better anyway. */
   .tl__ch.reveal:not(.in) .tl__copy,
   .tl__ch.reveal:not(.in) .tl__art,
   .tl__ch:nth-of-type(even).reveal:not(.in) .tl__copy,
@@ -853,7 +865,13 @@ footer{padding:var(--sp) 0 70px; text-align:center}
 
 @media (max-width:560px){
   :root{--shell: min(1180px, 96vw)}
-  .tl__art--portrait{width:min(100%,300px)}
+  /* The copy column is about 170px here, and both of these are tracked labels
+     wide enough to wrap in it — the link worse than the label, because a
+     wrapped .tl__link puts its border-bottom under two lines and reads as
+     broken rather than as tight. Tracking is the thing to give up; the size
+     is already at the floor. */
+  .tl__label{letter-spacing:.22em}
+  .tl__link{font-size:10px; letter-spacing:.16em}
   /* A 3:2 frame is about 230px tall here, which is enough of a map to be
      worth panning. The caption stops trying to span the width and centres
      under it instead. */
@@ -864,7 +882,11 @@ footer{padding:var(--sp) 0 70px; text-align:center}
   .nav__links{gap:16px}
   .rsvp-foot{flex-direction:column; align-items:stretch}
   .rsvp-foot .btn{justify-content:center}
+  /* flex-basis follows the main axis, so the 260px that keeps the field wide
+     enough on a row becomes a 260px *height* the moment the row stacks —
+     leaving the button stranded 200px under the input. Size it by content. */
   .lookup__row{flex-direction:column; align-items:stretch}
+  .lookup__field{flex:none}
   .lookup__row .btn{justify-content:center}
   .roster__row{flex-direction:column; align-items:flex-start; gap:12px}
   .roster__seg{width:100%}
