@@ -530,13 +530,31 @@ read from `js/guests.js` in the browser.
   listener on purpose — without the exclusion, pressing "Play music" on an
   untouched page would turn the music on and its own handler would turn it
   straight back off.
-- **The level goes through a WebAudio gain, not `score.volume`.** iOS Safari
-  makes `volume` read-only, so a level set or a fade through the element is
-  silently a no-op on a large part of this guest list. `createMediaElementSource`
-  may be called only once per element, which is what the `ctx !== null` guard
-  is protecting; `ctx === false` means WebAudio was missing or threw and the
-  element's own `volume` is the fallback. `LEVEL` (0.45) is the knob to turn
-  if it is too loud — turn it, not the file.
+- **The level goes through a WebAudio gain, not `score.volume`** — iOS Safari
+  makes `volume` read-only — **but the gain is wired in only once the element
+  is already playing, and that order is load-bearing.**
+  `createMediaElementSource` on an element that has not loaded yet (which is
+  what `preload="none"` guarantees) is the configuration Safari is worst at:
+  it reports the track playing and puts out silence. So `apply()` plays the
+  bare element, and the `playing` event calls `route()`, which builds the
+  graph. A graph that fails now costs the fade, not the music. Three further
+  consequences worth keeping:
+  - It starts `muted` and is unmuted as the gain comes in line. `volume` is
+    read-only on iOS but `muted` is not, so muting is the only way to open
+    quietly on a phone instead of at the file's own level.
+  - A refused `play()` calls `listen()` again, so the *next* gesture retries.
+    One gesture a browser declined to count must not cost the whole visit.
+  - The `AudioContext` is still constructed inside the gesture handler even
+    though the graph is not — Safari will only start one from a gesture, and
+    `playing` arrives long after it has ended.
+  `createMediaElementSource` may be called only once per element, which is
+  what `routed` protects. `LEVEL` (0.45) is the knob to turn if it is too
+  loud — turn it, not the file.
+- **The fetch is started by hand on `window.load`.** `preload="none"` keeps
+  three megabytes from competing with the painting and the fonts, but left at
+  that the gate press is followed by a wait rather than by music, which a
+  guest cannot tell from nothing having happened. The guest has the title
+  card to read, so the buffer is there by the time they press.
 - The toggle (`.sound`) is fixed in the corner and appears on `body.ready`
   alone. It cannot ride the nav rail: that only arrives once the hero has
   gone past, and music with no way to silence it until the guest scrolls is

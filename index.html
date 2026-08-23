@@ -401,10 +401,11 @@
 <!-- GSAP is vendored rather than pulled from a CDN: the page is meant to
      work offline in a Live Server and to make no third-party request. -->
 <!-- The score. preload="none" so three megabytes do not compete with the
-     painting and the three fonts at load: it starts buffering only when the
-     guest opens the invitation. No autoplay attribute — autoplay with sound
-     is blocked in every engine, and with JS off there would be no way to
-     stop it (the noscript rule above hides the toggle for the same reason). -->
+     painting and the three fonts at load; js/main.js starts the fetch by
+     hand once the page has loaded, well before the guest has finished
+     reading the title card. No autoplay attribute — autoplay with sound is
+     blocked in every engine, and with JS off there would be no way to stop
+     it (the noscript rule above hides the toggle for the same reason). -->
 <audio id="score" src="assets/audio/theme.mp3" loop preload="none"></audio>
 
 <script src="assets/js/gsap.min.js" defer></script>

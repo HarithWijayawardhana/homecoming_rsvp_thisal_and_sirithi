@@ -305,12 +305,32 @@ var LOOKUP_ENDPOINT = '/api/lookup';
      there is no press to hang anything on and the track simply waits for
      the guest's first tap, or for the button.
 
-     The level goes through a WebAudio gain rather than score.volume,
-     because iOS Safari makes volume read-only: a level set or a fade
-     through the element is silently a no-op on a good part of this guest
-     list. It is a platform API, not a dependency — the page still has
-     exactly one front-end dependency — and if AudioContext is missing or
-     throws we fall back to the element and lose only the fade.
+     Four things about the order below are load-bearing, and every one of
+     them is there because a browser that is not Chrome does not behave
+     like Chrome:
+
+     1. The element is played on its own first, and the WebAudio gain is
+        wired in only once it is *actually playing*. createMediaElementSource
+        on an element that has not loaded yet — which is exactly what
+        preload="none" guarantees — is the configuration Safari is worst at:
+        it reports the track playing and puts out silence. Wiring the graph
+        in afterwards means a graph that fails costs the fade, not the music.
+     2. It starts muted and is unmuted as the gain comes in line. score.volume
+        is read-only on iOS but score.muted is not, so muting is the only way
+        to open quietly on a phone rather than at whatever level the file was
+        mastered at.
+     3. A refused play() puts the first-gesture listener back. One gesture the
+        browser declined to count must not cost the guest the music for the
+        rest of the visit.
+     4. The three megabytes are fetched by hand after window load. The guest
+        still has the title card to read before they press anything, so by
+        then it is buffered — and without it the press is followed by a wait
+        instead of by music, which is indistinguishable from nothing having
+        happened.
+
+     The level still goes through a gain node rather than score.volume,
+     because iOS ignores volume. It is a platform API, not a dependency —
+     the page still has exactly one front-end dependency.
 
      No storage anywhere: a guest who has silenced the music has silenced it
      for this page session, the same way the curtain runs once. */
@@ -321,32 +341,48 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     var LEVEL = 0.45,                // under the room, not in it
         FADE  = 1.2;                 // seconds, both ways
 
-    var wants = false,               // what the guest has asked for
-        armed = false,               // the page has been touched
+    var wants  = false,              // what the guest has asked for
+        routed = false,              // the gain node is in line
+        stopFade = 0,
         /* audioCtx, not ctx: the petal canvas already holds a `var ctx`
            at this IIFE's scope, and a second one here would blank it.
            null: not built yet. false: no WebAudio, use the element. */
-        audioCtx = null, audioGain = null,
-        stopFade = 0;
+        audioCtx = null, audioGain = null;
 
-    /* Built on the first play rather than at load: by then the page has
-       sticky activation, so the context starts running instead of
-       suspended. createMediaElementSource may be called only once per
-       element, which is what the audioCtx guard is really protecting. */
-    function graph(){
-      if(audioCtx !== null) return;
+    /* The context is built inside the gesture handler even though the graph
+       is not: Safari will only start one from a user gesture, and by the
+       time 'playing' arrives that gesture is long over. */
+    function context(){
+      if(audioCtx !== null) return audioCtx;
       var AC = window.AudioContext || window.webkitAudioContext;
+      try{ audioCtx = AC ? new AC() : false; }
+      catch(e){ audioCtx = false; }
+      return audioCtx;
+    }
+
+    /* Put the gain node in line and give it the level. Once only —
+       createMediaElementSource may be called a single time per element —
+       and never before the element is playing. */
+    function route(){
+      if(routed) return;
+      routed = true;
+      var c = context();
       try{
-        if(!AC) throw 0;
-        audioCtx  = new AC();
-        audioGain = audioCtx.createGain();
+        if(!c) throw 0;
+        audioGain = c.createGain();
         audioGain.gain.value = 0;
-        audioCtx.createMediaElementSource(score).connect(audioGain).connect(audioCtx.destination);
+        c.createMediaElementSource(score).connect(audioGain).connect(c.destination);
+        score.muted = false;                 // the gain is the level now
+        ramp(wants ? LEVEL : 0);
       }catch(e){
-        audioCtx = false; audioGain = null;
-        score.volume = LEVEL;        // desktop only; iOS ignores this
+        /* No graph: the element is the level, which on iOS means the file's
+           own. Loud is a worse invitation than quiet, but both beat silent. */
+        audioGain = null;
+        score.muted = false;
+        score.volume = LEVEL;
       }
     }
+    score.addEventListener('playing', route);
 
     /* A track that arrives at full level reads as a mistake, and one that
        stops dead reads as a fault, so both ends are ramped. With no gain
@@ -374,53 +410,84 @@ var LOOKUP_ENDPOINT = '/api/lookup';
     function apply(){
       clearTimeout(stopFade);
       if(wants && !document.hidden){
-        graph();
-        if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        /* A muted element is allowed to play with no gesture at all, and is
+           then silenced again the moment it is unmuted — a failure with no
+           rejection to catch. If the page has never been activated, don't
+           start; the toggle is a gesture and will. */
+        var act = window.navigator.userActivation;
+        if(act && !act.hasBeenActive){ wants = false; mark(); listen(); return; }
+
+        var c = context();
+        if(c && c.state === 'suspended') c.resume();
+        if(!routed) score.muted = true;      // quiet until the gain is in line
         var p = score.play();
-        /* A refused play() is not an error, it is a page the guest has not
-           touched yet. Fall back to off, and their press starts it — a
-           press being a gesture, that always works. */
-        if(p && p['catch']) p['catch'](function(){ wants = false; mark(); });
-        ramp(LEVEL);
+        if(p && p.then) p.then(settled, refused);
+        if(routed) ramp(LEVEL);
       }else{
         ramp(0, function(){ score.pause(); });
       }
       mark();
     }
 
-    function drop(){
+    /* Playing, but 'playing' is what wires the gain in — and if that event
+       never lands the element would stay muted for good. */
+    function settled(){
+      setTimeout(function(){ if(!routed && !score.paused) route(); }, 4000);
+    }
+
+    /* The browser would not start it. Not an error — a gesture it declined
+       to count. Go back to off and start listening again, so the next touch
+       tries rather than leaving the guest a button they have to notice. */
+    function refused(){
+      wants = false;
+      score.muted = false;
+      mark();
+      listen();
+    }
+
+    function listen(){
+      document.addEventListener('pointerdown', first, true);
+      document.addEventListener('keydown', first, true);
+    }
+    function unlisten(){
       document.removeEventListener('pointerdown', first, true);
       document.removeEventListener('keydown', first, true);
     }
     /* The toggle is excluded, and the exclusion is the whole point: a press
-       on it is a first gesture too, and if this ran the button would turn
+       on it is a first gesture too, and without this the button would turn
        the music on a tenth of a second before its own handler turned it
-       off — a guest pressing "Play music" would get silence. Leave that
-       press to the handler below, which knows which way it means. */
+       off — a guest pressing "Play music" would get silence. */
     function first(e){
-      if(armed) return;
       if(e && e.target && e.target.closest && e.target.closest('.sound')) return;
-      armed = true; drop();
+      unlisten();
       wants = true;
       apply();
     }
     /* Capture, and on the document: the press that matters belongs to the
        curtain's own button, which this file may not touch. */
-    document.addEventListener('pointerdown', first, true);
-    document.addEventListener('keydown', first, true);
+    listen();
 
     sound.addEventListener('click', function(){
-      armed = true; drop();
+      unlisten();
       wants = !wants;
       apply();
     });
 
     document.addEventListener('visibilitychange', function(){
-      if(armed) apply();
+      if(wants || !score.paused) apply();
+    });
+
+    /* Start the fetch once the page itself has finished loading, and only if
+       the guest has not already set it going. */
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        if(score.paused && !routed){ score.preload = 'auto'; score.load(); }
+      }, 400);
     });
 
     mark();
   }
+
 
   /* ---------- rsvp, step one: find the invitation ---------- */
   var $ = function(id){ return document.getElementById(id); };
