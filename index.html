@@ -75,23 +75,23 @@
   </header>
 
   <!-- ================= HERO =================
-       The formal request used to live here as a 15px paragraph. It is its
-       own section now — on an invitation that sentence is the document —
-       which leaves the hero with the names, the date, the room and the scroll
-       cue: no buttons, the page itself is the way in. Note the consequence: anything moved out of .hero leaves the
-       set js/main.js staggers (`.hero .reveal`) and falls through to the
-       IntersectionObserver instead. -->
+       The formal request lives here, under the names, and nowhere else:
+       set twice it landed twice within one scroll on a phone, which read
+       as a mistake rather than as a refrain. #invitation keeps the facts —
+       the date and the room — and says them once. So the hero is the
+       painting, the names, the request and the scroll cue: no buttons, no
+       way in but the page itself. Note the consequence: anything moved
+       out of .hero leaves the set js/main.js staggers (`.hero .reveal`) and
+       falls through to the IntersectionObserver instead — and the data-d
+       stagger on what is left has to be renumbered to stay contiguous, since
+       that is the path reduced motion and a missing GSAP both take. -->
   <section class="hero" id="top">
     <div class="hero__copy">
       <p class="eyebrow reveal" data-d="1">Together with their families</p>
       <h1 class="display hero__names reveal" data-d="2">Thisal <span class="amp">&amp;</span> Sirithi</h1>
       <div class="rule reveal" data-d="2"><i></i><b></b><i></i></div>
-      <div class="factline reveal" data-d="3">
-        <span class="big">26 September 2026</span>
-        <span class="sm">from 7.00 p.m. onwards</span>
-      </div>
-      <p class="venue reveal" data-d="4">The Lumina Ballroom<span>Cinnamon Life at City of Dreams</span></p>
-      <div class="cue reveal" data-d="5" aria-hidden="true"><span>Scroll</span><i></i></div>
+      <p class="hero__line reveal" data-d="3">request the honour of your presence at their homecoming reception</p>
+      <div class="cue reveal" data-d="4" aria-hidden="true"><span>Scroll</span><i></i></div>
     </div>
 
     <div class="hero__art">
@@ -126,17 +126,20 @@
        shell. It opens on the painted ogee rather than on the drawn .crest
        that used to sit here: same motif, and the one ornament on the sheet
        that already carries the arch. Two ogees stacked would be one too
-       many, so the crest came out. -->
+       many, so the crest came out.
+
+       The eyebrow, the names and the request all live in the hero now. What
+       is left here is the part the hero deliberately does not carry — the
+       date, the hour and the room — signed off by the couple. -->
   <section id="invitation" class="bleed ground--pale">
     <div class="invite column reveal">
       <img class="orn orn--arch" src="assets/img/orn-arch.webp" alt="" aria-hidden="true" width="1040" height="123" loading="lazy" decoding="async">
-      <p class="eyebrow eyebrow--gold">Together with their families</p>
-      <p class="invite__names">Thisal <span class="amp">&amp;</span> Sirithi</p>
-      <p class="invite__line">request the honour of your presence at their homecoming reception</p>
       <div class="rule"><i></i><b></b><i></i></div>
-      <p class="invite__when">Saturday the twenty-sixth of September<br>two thousand and twenty-six, at seven in the evening</p>
-      <p class="invite__where">The Lumina Ballroom<br>Cinnamon Life at City of Dreams</p>
-      <p class="invite__close">It would not be a celebration without you in the room.</p>
+      <div class="factline">
+        <span class="big">26 September 2026</span>
+        <span class="sm">from 7.00 p.m. onwards</span>
+      </div>
+      <p class="venue">The Lumina Ballroom<span>Cinnamon Life at City of Dreams</span></p>
       <p class="invite__sign">Thisal <span class="amp">&amp;</span> Sirithi</p>
     </div>
   </section>
@@ -165,7 +168,7 @@
         <span class="tl__node" aria-hidden="true"></span>
         <div class="tl__copy">
           <p class="tl__year">2015</p>
-          <p class="tl__label">The bench</p>
+          <p class="tl__label">The unexpected meeting</p>
           <p class="tl__text">We first met in June 2015, sitting on the same bench for an exam. Neither of us thought anything of it.</p>
         </div>
         <div class="tl__art tl__art--wide">

@@ -237,6 +237,13 @@ body.ready .nav.is-past{opacity:1; transform:none; pointer-events:auto}
 .hero__names .amp{
   color:var(--gold); font-size:.78em; padding:0 .06em; position:relative; top:-.02em;
 }
+/* The request. This is the only place on the page it is set — it was in
+   #invitation too, and on a phone the two landed within one scroll of each
+   other and read as a duplication rather than a refrain. */
+.hero__line{
+  font-family:'Marcellus',serif; font-size:clamp(15px,1.5vw,19px);
+  line-height:1.7; color:var(--ink-2); max-width:32ch;
+}
 .factline{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 16px}
 .factline .big{font-family:'Italiana',serif; font-size:clamp(26px,3.2vw,42px); letter-spacing:.03em}
 .factline .sm{font-size:12px; letter-spacing:.26em; text-transform:uppercase; color:var(--muted)}
@@ -378,30 +385,14 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
 .sechead p{font-family:'Marcellus',serif; color:var(--ink-2); max-width:46ch; font-size:clamp(14px,1.4vw,17px)}
 
 /* ---------- the invitation ----------
-   The sentence the whole page exists to say, finally set at the size it
-   deserves and framed by the ogee rather than boxed in a card. */
+   The date, the hour and the room, framed by the ogee rather than boxed in a
+   card. The eyebrow, the names and the request are the hero's, said once. */
 .invite{max-width:min(760px,100%); margin-inline:auto}
-.invite__names{
-  font-family:'Italiana',serif; font-size:clamp(38px,6.4vw,88px);
-  line-height:1; letter-spacing:.02em; color:var(--ink);
-}
-.invite__names .amp{color:var(--gold); font-size:.7em; padding-inline:.08em}
-.invite__line{
-  font-family:'Marcellus',serif; font-size:clamp(15px,1.7vw,21px);
-  line-height:1.7; color:var(--ink-2); max-width:34ch;
-}
-.invite__when{
-  font-family:'Italiana',serif; font-size:clamp(19px,2.4vw,32px);
-  line-height:1.4; letter-spacing:.03em; color:var(--ink);
-}
-.invite__where{
-  font-family:'Jost',sans-serif; font-size:clamp(10px,1.1vw,12px);
-  letter-spacing:.3em; text-transform:uppercase; color:var(--muted); line-height:2.1;
-}
-.invite__close{
-  font-family:'Marcellus',serif; font-style:italic;
-  font-size:clamp(14px,1.5vw,17.5px); color:var(--ink-2); max-width:38ch;
-}
+/* The date and the room live in the invitation now, not the hero. .factline
+   was built as a wrapping row for the hero's left-aligned column; in a
+   centred column it has to stack, or the date and the hour sit shoulder to
+   shoulder on one baseline and stop reading as a lockup. */
+.invite .factline{flex-direction:column; align-items:center; gap:10px}
 .invite__sign{
   font-family:'Italiana',serif; font-size:clamp(22px,2.8vw,36px);
   letter-spacing:.03em; color:var(--ink);
@@ -675,9 +666,18 @@ section{padding-block:var(--sp); scroll-margin-top:40px}
    the element's OWN font-size, so a mask at the inherited 16px clipped a
    60px numeral to a sliver. Sizing the mask and letting .n inherit keeps
    the clip exactly one line tall at every width. */
+/* Marcellus, not Italiana, for the one set of numerals on the page that has
+   to be read at a glance rather than admired: Italiana's 4 closes up and its
+   7 trails a swash, which at 60px on velvet turns "47" into a guess. The
+   display face still owns every other numeral (the date, the story years).
+   min-width is what keeps the row still: no face here has tabular figures,
+   so the Days cell was resizing from 71px to 40px as the digits changed and
+   dragging its neighbours sideways every second. 1.7em clears the widest
+   two-digit pair with room to spare, and being an em it holds at every step
+   of the clamp; three digits would simply grow past it. */
 .count .mask{
-  overflow:hidden; display:block;
-  font-family:'Italiana',serif; font-size:clamp(32px,4.6vw,60px);
+  overflow:hidden; display:block; min-width:1.7em;
+  font-family:'Marcellus',serif; font-size:clamp(32px,4.6vw,60px);
   line-height:1.06; height:1.06em;
 }
 .count .n{
@@ -807,7 +807,7 @@ footer{padding:var(--sp) 0 70px; text-align:center}
   .artwrap{width:min(84%, 46svh)}
   .hero__copy{max-width:none; align-items:center; text-align:center}
   .rule{margin-inline:auto}
-  .factline{justify-content:center}
+  .hero__line{margin-inline:auto}
   .grid{grid-template-columns:1fr}
 }
 
@@ -864,7 +864,11 @@ footer{padding:var(--sp) 0 70px; text-align:center}
   .nav__links{gap:16px}
   .rsvp-foot{flex-direction:column; align-items:stretch}
   .rsvp-foot .btn{justify-content:center}
+  /* flex-basis follows the main axis, so the 260px that keeps the field wide
+     enough on a row becomes a 260px *height* the moment the row stacks —
+     leaving the button stranded 200px under the input. Size it by content. */
   .lookup__row{flex-direction:column; align-items:stretch}
+  .lookup__field{flex:none}
   .lookup__row .btn{justify-content:center}
   .roster__row{flex-direction:column; align-items:flex-start; gap:12px}
   .roster__seg{width:100%}
