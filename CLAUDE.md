@@ -680,12 +680,29 @@ reduced motion honoured, no layout shift on load. Check these on any change.
 1. ~~Set `RSVP_ENDPOINT`~~ — done. Points at `/api/rsvp`, and a real submission
    was confirmed landing in Postgres and coming back out of the CSV export.
 2. ~~Replace the placeholder guest list~~ — done. The real list is in
-   `js/guests.js` and seeded: 10 invitations, 23 people. It was transcribed
-   from `new_guest_list/Thisal_and_sirithi_homecoming_guest_list.xlsx`, one
-   column of names with **a blank row between invitations** — those blanks are
-   the envelopes, and the grouping follows them exactly. Neither the
-   spreadsheet nor `js/guests.js` is in the repo or on the deployment — see
-   "The guest list is neither deployed nor committed" above.
+   `js/guests.js` and seeded: 54 invitations, 62 people, from two
+   spreadsheets in `new_guest_list/`. The first is one column of names with
+   **a blank row between invitations** — those blanks are the envelopes, and
+   the grouping follows them exactly: 15 invitations, 23 people, no titles.
+   The second is 39 further names, one invitation each, and it **carries
+   titles the first does not**, so the roster mixes the two styles. Three
+   conventions came out of that second list and are worth keeping:
+   - A `Mr. & Mrs.` line is **one entry in `people`, not two**. There is no
+     second given name to put on a roster row, and a row labelled only by a
+     title is worse than a couple answering together. The first list already
+     had one of these.
+   - Ids stay `surname-NN` and the file is **ordered by id**, so the seven
+     surnames that now repeat sit next to each other and an eighth is hard
+     to add by accident. Four of the new names collided with the first list.
+   - Where the sheet's spelling of a surname looks like a slip, the sheet's
+     spelling is what shows and the likely-correct one goes in `aliases`, so
+     either finds the invitation. Two entries have this; ask before
+     "fixing" the displayed spelling.
+
+   Names are deliberately not quoted here — this file is committed and the
+   repo is public. Neither spreadsheet nor `js/guests.js` is in the repo or
+   on the deployment; see "The guest list is neither deployed nor committed"
+   above, which is also why the examples are described rather than named.
 3. Replace placeholder copy. Respond-by is 10 September 2026.
    ~~The map~~ — done, and it is now a **Google iframe**, not a drawn plate.
    It is the page's one third-party request; everything else, GSAP included,
